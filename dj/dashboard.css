@@ -51,3 +51,12 @@
 }
 /* Stronger amber bloom along the lower light wave. */
 .dj-page:before{height:190px;filter:drop-shadow(0 -2px 5px #ffb75c88) drop-shadow(0 -7px 20px #f78b2555);opacity:1}
+
+/* Slow ambient drift, independent of the spectrum's quicker rhythm. */
+@media(prefers-reduced-motion:no-preference){
+ .dj-page:before{left:-3%;right:-3%;transform-origin:center bottom;animation:ambient-wave 14s ease-in-out infinite}
+ @keyframes ambient-wave{
+  0%,100%{transform:translateX(-1%) translateY(2px) scaleY(.96)}
+  50%{transform:translateX(1%) translateY(-7px) scaleY(1.06)}
+ }
+}
