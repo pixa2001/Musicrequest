@@ -122,19 +122,24 @@ function exportList(){
  const event=events.find(e=>e.id===selectedEvent);
  const date=event?.session_date||new Date().toISOString().slice(0,10);
  const lines=["TABERNA FLAMENCA - DJ SONGWUENSCHE","DJ-Abend: "+new Date(date+"T12:00:00").toLocaleDateString("de-DE"),"Enthält auch gespielte Songs",""];
- // The backend sends ALL rows for this event; the filter "Gespielte anzeigen" has no effect here.
+ // All rows for the selected event are loaded from Supabase, even played songs.
+ // Deduplicate across the entire evening, even when later requests had different categories.
+ const items=[];
+ for(const row of requests){
+  const match=items.find(x=>sameMusic(x,row));
+  if(match){
+   match.request_count+=Number(row.request_count);
+   match.played=match.played&&row.played;
+  }else items.push({...row,request_count:Number(row.request_count)});
+ }
  for(const category of categories){
   lines.push("=== "+categoryLabels[category]+" ===");
-  const items=[];
-  for(const row of requests.filter(r=>(r.category||"international")===category)){
-   const match=items.find(x=>sameMusic(x,row));
-   if(match){match.request_count+=Number(row.request_count);match.played=match.played&&row.played;}
-   else items.push({...row,request_count:Number(row.request_count)});
+  const songs=items.filter(r=>(r.category||"international")===category);
+  for(const item of songs){
+   const number=Number(item.request_count);
+   lines.push(item.song_title+" - "+item.artist+" | "+number+" "+(number===1?"Wunsch":"Wünsche")+" | "+(item.played?"Gespielt":"Offen"));
   }
-  for(const item of items){
-   lines.push(item.song_title+" - "+item.artist+" | "+item.request_count+" Wunsch"+(item.request_count===1?"":"wuensche")+" | "+(item.played?"Gespielt":"Offen"));
-  }
-  if(!items.length)lines.push("(Keine Songs)");
+  if(!songs.length)lines.push("(Keine Songs)");
   lines.push("");
  }
  const blob=new Blob(["\uFEFF"+lines.join("\r\n")],{type:"text/plain;charset=utf-8"});
