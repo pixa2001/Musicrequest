@@ -23,11 +23,15 @@ function el(tag,className,text){
 function display(){
  const showDone=$("#show-done").checked;
  const visible=requests.filter(r=>showDone||!r.played);
+ $("#total-count").textContent=requests.reduce((sum,r)=>sum+Number(r.request_count||1),0);
+ $("#played-count").textContent=requests.filter(r=>r.played).length;
+ $("#open-count").textContent=requests.filter(r=>!r.played).length;
  count.textContent=visible.filter(r=>!r.played).length+" offene Songs";
  for(const category of categories){
   const list=$("#list-"+category);list.replaceChildren();
   const songs=visible.filter(r=>(r.category||"international")===category)
       .sort((a,b)=>new Date(a.first_requested_at)-new Date(b.first_requested_at)||a.id-b.id);
+  $("#count-"+category).textContent=songs.length;
   if(!songs.length){list.append(el("div","empty","Noch keine Musikwünsche."));continue;}
   for(const row of songs){
    const article=el("article","request"+(row.played?" done":""));
@@ -37,19 +41,13 @@ function display(){
    detail.append(el("div","requesters",(row.guest_names||[]).join(", ")));
    const side=el("div","row-side");
    if(Number(row.request_count)>1)side.append(el("span","plus","+"+(Number(row.request_count)-1)));
-   const played=el("button","mark",row.played?"Wieder öffnen":"Gespielt");
+   const played=el("button","mark",row.played?"↶":"▶\uFE0E");
+   played.type="button";
+   played.setAttribute("aria-label",(row.played?"Wieder öffnen: ":"Als gespielt markieren: ")+row.song_title);
+   played.title=row.played?"Wieder öffnen":"Als gespielt markieren";
    played.addEventListener("click",()=>markPlayed(row.id,!row.played));
    side.append(played);detail.append(side);
-   const select=el("select","category-select");
-   select.setAttribute("aria-label","Musikkategorie für "+row.song_title+" ändern");
-   for(const optionCategory of categories){
-    const option=el("option","",categoryLabels[optionCategory]);option.value=optionCategory;
-    select.append(option);
-   }
-   select.value=row.category||"international";
-   select.disabled=legacy;
-   select.addEventListener("change",()=>moveSong(row.id,select.value));
-   detail.append(select);article.append(detail);list.append(article);
+   article.append(detail);list.append(article);
   }
  }
 }
@@ -94,12 +92,6 @@ async function markPlayed(id,played){
  if(error){feedback("Status konnte nicht geändert werden.");return;}
  await load();
 }
-async function moveSong(id,category){
- if(legacy)return;
- const {error}=await client.rpc("dj_set_category",{p_request_id:id,p_category:category});
- if(error){feedback("Kategorie konnte nicht geändert werden.");await load();return;}
- await load();
-}
 function normalize(s){return (s||"").normalize("NFKD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim();}
 function distance(a,b){
  if(a===b)return 0;
@@ -139,6 +131,7 @@ function exportList(){
    const number=Number(item.request_count);
    lines.push(item.song_title+" - "+item.artist+" | "+number+" "+(number===1?"Wunsch":"Wünsche")+" | "+(item.played?"Gespielt":"Offen"));
   }
+  $("#count-"+category).textContent=songs.length;
   if(!songs.length)lines.push("(Keine Songs)");
   lines.push("");
  }
