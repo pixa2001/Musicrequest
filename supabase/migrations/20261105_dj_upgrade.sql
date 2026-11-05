@@ -28,7 +28,7 @@ create index if not exists song_requests_client_limit_idx on public.song_request
 insert into public.dj_events(session_date,starts_at,ends_at)
 select distinct session_date,
  (session_date + time '06:00') at time zone 'Europe/Berlin',
- (session_date + interval '1 day' + time '06:00') at time zone 'Europe/Berlin'
+ (session_date + 1 + time '06:00') at time zone 'Europe/Berlin'
 from (
  select ((first_requested_at at time zone 'Europe/Berlin') - interval '6 hours')::date as session_date
  from public.song_groups
@@ -89,7 +89,7 @@ begin
  insert into public.dj_events(session_date,starts_at,ends_at)
  values(event_key,
         (event_key+time '06:00') at time zone 'Europe/Berlin',
-        (event_key+interval '1 day'+time '06:00') at time zone 'Europe/Berlin')
+        (event_key+1+time '06:00') at time zone 'Europe/Berlin')
  on conflict(session_date) do nothing;
  select id into selected_event from public.dj_events where session_date=event_key;
  perform pg_advisory_xact_lock(4839201);
@@ -169,31 +169,23 @@ exception when duplicate_object then null; end $$;
 create or replace function public.delete_expired_dj_events()
 returns integer language plpgsql security definer
 set search_path=pg_catalog,public as $$
-declare deleted_count integer;
+declare event_row record; deleted_count integer:=0;
 begin
- if current_user <> 'postgres' and auth.role() <> 'service_role' then
+ if auth.role() <> 'service_role' then
    raise exception 'Not authorized'; end if;
- -- Do not delete requests if there are any later than the event expiration.
- with expired as (
-  select e.id from public.dj_events e
-  where e.ends_at < now() - interval '7 days'
-    and not exists(
-      select 1 from public.song_requests r
-      where r.event_id=e.id and r.created_at >= now()-interval '7 days')
- ),
- deleted_requests as (
-  delete from public.song_requests r using expired e
-  where r.event_id=e.id returning r.id
- ),
- deleted_groups as (
-  delete from public.song_groups g using expired e
-  where g.event_id=e.id returning g.id
- ),
- deleted_events as (
-  delete from public.dj_events e using expired x
-  where e.id=x.id returning e.id
- )
- select count(*) into deleted_count from deleted_events;
+ for event_row in
+   select e.id from public.dj_events e
+   where e.ends_at < now() - interval '7 days'
+     and not exists(
+       select 1 from public.song_requests r
+       where r.event_id=e.id and r.created_at >= now()-interval '7 days'
+     )
+ loop
+   delete from public.song_requests where event_id=event_row.id;
+   delete from public.song_groups where event_id=event_row.id;
+   delete from public.dj_events where id=event_row.id;
+   deleted_count:=deleted_count+1;
+ end loop;
  return deleted_count;
 end;$$;
 revoke all on function public.delete_expired_dj_events() from public,anon,authenticated;
