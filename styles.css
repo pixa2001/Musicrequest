@@ -28,7 +28,7 @@
 }
 
 /* Guest request form: original centered logo and equal-width compulsory category choices. */
-.guest-logo{display:block;width:124px;height:124px;aspect-ratio:1;object-fit:cover;clip-path:circle(42% at 50% 50%);border-radius:50%;margin:0 auto 16px}
+.guest-logo{display:block;width:124px;height:124px;aspect-ratio:1;object-fit:contain;border-radius:50%;margin:0 auto 16px}
 .guest-card h1{text-align:center}
 .guest-card .subtitle{text-align:center}
 .category-field{border:0;padding:0;margin:17px 0 3px;min-width:0}
