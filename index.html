@@ -1,15 +1,15 @@
 <!doctype html>
 <html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#17121b"><title>Song Requests · Taberna Flamenca</title><link rel="stylesheet" href="./styles.css"><link rel="stylesheet" href="./guest-theme.css"></head><body>
 <main class="guest-page"><section class="guest-card"><img class="guest-logo" src="./assets/taberna-round-hq.png" alt="Taberna Flamenca logo"><h1>Hey Dj... play my Song!</h1><div class="flamenca-divider" aria-hidden="true"><span>✦</span></div><p class="subtitle">Tell DJ TomaKetama your favorite song!</p>
-<form id="request-form"><label class="sr-only" for="guest">Your Name</label><div class="glow-field"><span class="field-icon" aria-hidden="true">♙</span><input id="guest" name="guest" maxlength="60" autocomplete="name" required placeholder="Your Name"></div>
-<label class="sr-only" for="title">Song Title</label><div class="glow-field"><span class="field-icon" aria-hidden="true">♫</span><input id="title" name="title" maxlength="120" required placeholder="Song Title"></div>
+<form id="request-form"><label class="sr-only" for="guest">Your Name</label><div class="glow-field"><span class="field-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"/><path d="M3 22v-3a9 9 0 0 1 18 0v3"/></svg></span><input id="guest" name="guest" maxlength="60" autocomplete="name" required placeholder="Your Name"></div>
+<label class="sr-only" for="title">Song Title</label><div class="glow-field"><span class="field-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 18V5l12-3v13M9 8l12-3"/><ellipse cx="5.5" cy="19" rx="3.5" ry="3"/><ellipse cx="17.5" cy="16" rx="3.5" ry="3"/></svg></span><input id="title" name="title" maxlength="120" required placeholder="Song Title"></div>
 
-<label class="sr-only" for="artist">Artist</label><div class="glow-field"><span class="field-icon" aria-hidden="true">✦</span><input id="artist" name="artist" maxlength="120" required placeholder="Artist"></div>
+<label class="sr-only" for="artist">Artist</label><div class="glow-field"><span class="field-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="8" y="2" width="8" height="13" rx="4"/><path d="M5 10v2a7 7 0 0 0 14 0v-2M12 19v4M8 23h8"/></svg></span><input id="artist" name="artist" maxlength="120" required placeholder="Artist"></div>
 <fieldset class="category-field"><legend>Music Category <span class="required-label">Required</span></legend><div class="category-options">
 <label class="category-choice"><input type="radio" name="category" value="german" required><span><span class="category-emoji">🎉</span><span>KARNEVAL</span></span></label>
-<label class="category-choice"><input type="radio" name="category" value="latino" required><span><span class="category-emoji">🇪🇸</span><span>SPANISH/<wbr>LATINO</span></span></label>
-<label class="category-choice"><input type="radio" name="category" value="international" required><span><span class="category-emoji">🇬🇧</span><span>ENGLISH/<wbr>OTHER</span></span></label>
+<label class="category-choice"><input type="radio" name="category" value="latino" required><span><span class="category-emoji">🇪🇸</span><span>SPANISH/<br>LATINO</span></span></label>
+<label class="category-choice"><input type="radio" name="category" value="international" required><span><span class="category-emoji">🇬🇧</span><span>ENGLISH/<br>OTHER</span></span></label>
 </div></fieldset>
-<button type="submit" id="submit"><span class="send-icon" aria-hidden="true">➤</span> Send It! Let's Go!</button><p class="feedback" id="feedback" role="status" aria-live="polite"></p></form>
+<button type="submit" id="submit"><span class="send-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m22 2-7 20-4-9-9-4 20-7ZM11 13 22 2"/></svg></span> Send It! Let's Go!</button><p class="feedback" id="feedback" role="status" aria-live="polite"></p></form>
 <p class="footnote">Song requests are suggestions. The DJ chooses what to play.</p></section></main>
 <script type="module" src="./src/guest.js?v=20261105-party-copy3"></script></body></html>
