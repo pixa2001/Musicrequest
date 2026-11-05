@@ -95,6 +95,7 @@ begin
  perform pg_advisory_xact_lock(4839201);
  select id into selected_group from public.song_groups
  where event_id=selected_event
+   and not played
    and first_requested_at>now()-interval '60 minutes'
    and (
     (normalized_song=n_song and normalized_artist=n_artist)
@@ -158,6 +159,7 @@ revoke all on function public.dj_set_category(bigint,text) from public,anon;
 grant execute on function public.dj_set_category(bigint,text) to authenticated;
 
 -- Realtime remains private: only DJ-authenticated users can select these rows.
+drop policy if exists "dj can view groups" on public.song_groups;
 create policy "dj can view groups" on public.song_groups
  for select to authenticated using(public.is_dj());
 grant select on public.song_groups to authenticated;
