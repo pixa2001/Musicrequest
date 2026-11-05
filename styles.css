@@ -28,7 +28,7 @@
 }
 
 /* Guest request form: original centered logo and equal-width compulsory category choices. */
-.guest-logo{display:block;width:106px;height:106px;aspect-ratio:1;object-fit:contain;margin:0 auto 16px}
+.guest-logo{display:block;width:116px;height:116px;aspect-ratio:1;object-fit:cover;clip-path:circle(48% at 50% 50%);border-radius:50%;margin:0 auto 16px}
 .guest-card h1{text-align:center}
 .guest-card .subtitle{text-align:center}
 .category-field{border:0;padding:0;margin:17px 0 3px;min-width:0}
@@ -40,7 +40,7 @@
 .category-choice > span{display:flex;align-items:center;justify-content:center;text-align:center;min-height:58px;width:100%;padding:7px 4px;background:#231b28;border:1px solid #745e76;border-radius:11px;color:#f5e9f4;font-size:clamp(.63rem,2.2vw,.77rem);font-weight:750;line-height:1.2;overflow-wrap:anywhere;transition:background .15s,border-color .15s,box-shadow .15s}
 .category-choice input:checked+span{background:#614162;border-color:#ffc5d6;color:#fff;box-shadow:inset 0 0 0 1px #ffc5d6}
 .category-choice input:focus-visible+span{outline:3px solid #f3a9c0;outline-offset:3px}
-@media(max-width:420px){.guest-card{padding:24px 18px}.guest-logo{width:100px;height:100px}.category-options{gap:5px}.category-choice > span{font-size:.65rem;padding:7px 2px}}
+@media(max-width:420px){.guest-card{padding:24px 18px}.guest-logo{width:110px;height:110px}.category-options{gap:5px}.category-choice > span{font-size:.65rem;padding:7px 2px}}
 
 /* Compact supplied PNG and horizontal categories with clear symbol/text hierarchy. */
 .category-options{grid-template-columns:repeat(3,minmax(0,1fr));}
