@@ -21,7 +21,8 @@ form.addEventListener("submit",async e=>{
     p_client_token:getBrowserToken(),p_category:category
   });
   if(error)throw error;
-  form.reset();message("Thanks! Your song request has been sent.","success");
+  const categoryNames={german:"KARNEVAL",latino:"SPANISH/LATINO",international:"ENGLISH/OTHER"};
+  form.reset();message("Song request sent to "+categoryNames[category]+".","success");
  }catch(err){
   console.error(err);
   if(err?.message?.includes("RATE_LIMIT")){
