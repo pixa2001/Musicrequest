@@ -5,6 +5,7 @@ const loginFeedback=$("#login-feedback"),connection=$("#connection"),count=$("#r
 const categories=["latino","german","international"];
 const categoryLabels={latino:"Latino / Spanisch",german:"Karneval / Deutsch",international:"Englisch / International"};
 let client,channel,requests=[],events=[],selectedEvent=null,legacy=false,refreshPending=false;
+let selectedDate=null,lastCalendarDate=null;
 function feedback(text){$("#dj-feedback").textContent=text;}
 function setFeedback(text){loginFeedback.textContent=text;loginFeedback.className="feedback error";}
 function ready(user){
@@ -51,19 +52,40 @@ function display(){
   }
  }
 }
-function setEvents(){
- const picker=$("#event-select");const oldValue=picker.value;
- picker.replaceChildren();
- for(const event of events){
-  const option=el("option","",new Date(event.session_date+"T12:00:00").toLocaleDateString("de-DE"));
-  option.value=String(event.id);picker.append(option);
- }
- if(selectedEvent&&events.some(e=>String(e.id)===String(selectedEvent)))picker.value=String(selectedEvent);
- else if(oldValue&&events.some(e=>String(e.id)===oldValue))picker.value=oldValue;
- else if(events.length)picker.value=String(events[0].id);
- selectedEvent=picker.value?Number(picker.value):null;
- picker.disabled=legacy||events.length===0;
+function berlinDate(now=new Date()){
+ const parts=new Intl.DateTimeFormat("en-CA",{timeZone:"Europe/Berlin",year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(now);
+ const value=type=>parts.find(p=>p.type===type).value;
+ return `${value("year")}-${value("month")}-${value("day")}`;
 }
+function calendarDays(today){
+ const date=new Date(today+"T12:00:00Z");
+ return Array.from({length:7},(_,index)=>{
+  const day=new Date(date);day.setUTCDate(day.getUTCDate()-index);
+  return day.toISOString().slice(0,10);
+ });
+}
+function setEvents(){
+ const picker=$("#event-select"),today=berlinDate();
+ const days=calendarDays(today);
+ if(lastCalendarDate!==today||!days.includes(selectedDate))selectedDate=today;
+ lastCalendarDate=today;
+ picker.replaceChildren();
+ for(const day of days){
+  const option=el("option","",new Date(day+"T12:00:00Z").toLocaleDateString("de-DE",{timeZone:"Europe/Berlin"}));
+  option.value=day;picker.append(option);
+ }
+ picker.value=selectedDate;
+ selectedEvent=events.find(e=>e.session_date===selectedDate)?.id??null;
+ picker.disabled=legacy;
+}
+function checkCalendarDay(){
+ if(!requestPanel.classList.contains("hidden")&&lastCalendarDate!==berlinDate()){
+  setEvents();requests=[];display();load();
+ }
+}
+setInterval(checkCalendarDay,1000);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)checkCalendarDay();});
+window.addEventListener("focus",checkCalendarDay);
 async function loadEvents(){
  const {data,error}=await client.rpc("dj_event_list");
  if(error){
@@ -111,8 +133,7 @@ function sameMusic(a,b){
 function exportList(){
  if(legacy){feedback("Bitte zuerst die SQL-Migration ausführen, damit pro DJ-Abend exportiert werden kann.");return;}
  if(!selectedEvent){feedback("Für diesen DJ-Abend sind noch keine Wünsche vorhanden.");return;}
- const event=events.find(e=>e.id===selectedEvent);
- const date=event?.session_date||new Date().toISOString().slice(0,10);
+ const date=selectedDate||berlinDate();
  const lines=["TABERNA FLAMENCA - DJ SONGWUENSCHE","DJ-Abend: "+new Date(date+"T12:00:00").toLocaleDateString("de-DE"),"Enthält auch gespielte Songs",""];
  // All rows for the selected event are loaded from Supabase, even played songs.
  // Deduplicate across the entire evening, even when later requests had different categories.
@@ -131,7 +152,6 @@ function exportList(){
    const number=Number(item.request_count);
    lines.push(item.song_title+" - "+item.artist+" | "+number+" "+(number===1?"Wunsch":"Wünsche")+" | "+(item.played?"Gespielt":"Offen"));
   }
-  $("#count-"+category).textContent=songs.length;
   if(!songs.length)lines.push("(Keine Songs)");
   lines.push("");
  }
@@ -168,6 +188,6 @@ $("#login-form").addEventListener("submit",async e=>{
 logout.addEventListener("click",async()=>{if(channel)await client.removeChannel(channel);await client.auth.signOut();ready(null);});
 $("#refresh").addEventListener("click",load);
 $("#show-done").addEventListener("change",display);
-$("#event-select").addEventListener("change",e=>{selectedEvent=Number(e.target.value);load();});
+$("#event-select").addEventListener("change",e=>{selectedDate=e.target.value;selectedEvent=events.find(event=>event.session_date===selectedDate)?.id??null;requests=[];display();load();});
 $("#export").addEventListener("click",exportList);
 initialize();
