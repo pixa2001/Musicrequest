@@ -82,7 +82,7 @@ revoke all on function public.submit_song_request(text,text,text) from public;
 grant execute on function public.submit_song_request(text,text,text) to anon,authenticated;
 
 create or replace function public.dj_song_request_list()
-returns table(id bigint,position bigint,song_title text,artist text,first_requested_at timestamptz,played boolean,request_count bigint,guest_names text[])
+returns table(id bigint,"position" bigint,song_title text,artist text,first_requested_at timestamptz,played boolean,request_count bigint,guest_names text[])
 language plpgsql security definer set search_path = '' as $$
 begin
  if not public.is_dj() then raise exception 'Not authorized'; end if;
