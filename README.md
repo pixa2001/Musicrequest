@@ -1,34 +1,81 @@
-# Taberna Flamenca · Music Requests
+# Taberna Flamenca · Musicrequest
 
-QR-code song request form and private live DJ dashboard, designed for running alongside djay Pro.
+Existing QR song-request app, now extended with a three-category DJ dashboard.
+GitHub Pages frontend: https://pixa2001.github.io/Musicrequest/
+DJ login: https://pixa2001.github.io/Musicrequest/dj/
 
-## Pages
-- Guest form: `/` — English form with three required fields: guest name, song title, artist.
-- DJ dashboard: `/dj/` — password-protected via Supabase Auth, chronological numbered rows, song title / artist / guest names, plus a `+N` badge for additional requests; mark played and reopen.
+## IMPORTANT: database upgrade required
 
-## Duplicate grouping
-Requests for the same song/artist within **60 minutes of the FIRST request** are grouped, including close spelling variants using pg_trgm similarity. A request after 60 minutes receives a NEW numbered row. Automatic fuzzy matching can make mistakes; tune thresholds or add manual merging later if needed.
+**Before testing the new features**, copy the entire file
+[`supabase/migrations/20261105_dj_upgrade.sql`](supabase/migrations/20261105_dj_upgrade.sql)
+into the **Supabase SQL Editor** of the EXISTING Musicrequest project and run it.
 
-## Setup (required before requests work)
-1. Create a Supabase project at https://supabase.com and copy **Project URL** and **publishable/anon key** into `src/config.js`. **NEVER use a service_role or secret key here.**
-2. In Supabase SQL Editor run `supabase/schema.sql`. This creates tables, secure RPC functions, and real-time publication.
-3. In Supabase **Authentication > Users**, add your DJ email and password. Copy its UUID and run in SQL Editor:
-   `insert into public.dj_accounts(user_id) values ('YOUR-USER-UUID');`
-4. In Auth settings, disable open public signups (DJ accounts should be admin-created).
-5. Publish the static files via GitHub Pages (branch root or GitHub Actions). Both views are in one repository, at `/` and `/dj/`. GitHub Pages hosts **public static HTML**, even when source code is private; the DJ request data is secured by Supabase, not by a secret URL.
-6. Once the guest URL works, print a QR code pointing to the guest URL only.
+- Do **not** re-run the original `supabase/schema.sql` on the existing project.
+- This migration adds columns, procedures and DJ-evening records without deleting the existing song requests or login credentials.
+- Existing requests are assigned to an evening from the original request timestamp in Europe/Berlin.
+- DJ evenings run from **06:00 local time to 06:00 the following day**, so midnight does not end the evening.
+- Requests are grouped within **60 minutes measured from the FIRST request**, only within the same DJ evening; misspelling matching is deliberately conservative.
 
-**Important:** This repository is an initial implementation, not a deployed or fully configured service. Requests will not be sent until Supabase is configured.
+The guest form falls back to the original RPC before the migration, but the categorization, export, evening list, server-side cooldown and cleanup require the migration.
 
-## How it works
-- Guest form calls the Supabase `submit_song_request` RPC (anonymous insert; no guest reads).
-- DJ signs in with Supabase Auth; authorized DJ accounts can call read/update RPCs.
-- Dashboard subscribes to realtime `song_requests` inserts, refreshing automatically. Refresh button is provided as fallback.
-- Song data and guest names are kept in the backend, never shared with guests.
-- No Spotify or djay Pro API integration; DJ selects songs manually.
+## Guest experience
 
-## Operational notes
-- Use a dedicated project and strong password.
-- Implement anti-spam / rate limits (e.g. CAPTCHA, edge function, gateway) before a large public event; public anonymous write endpoints can be abused.
-- Consider retention and privacy notices for guest names; add an easy way to clear an event's data after the party.
-- Fuzzy matching is approximate, not authoritative song identity verification.
+Guests see three English fields: Your Name, Song Title and Artist. No DJ access or song listings.
+The new `submit_song_request_v2` RPC records a randomly generated browser token as a one-way MD5 hash and enforces **one submission per browser token per 30 seconds**. The guest UI shows an English, friendly cooldown notice.
+
+**Important limitation:** This is server-enforced per anonymous *browser token*, not a guaranteed per-human limit. Guests who delete their browser storage or use another browser/device can bypass it. Robust per-IP limits need a trusted gateway or a CAPTCHA. No IP addresses are collected by this implementation.
+
+## DJ dashboard
+
+- Desktop: **three equal columns**, Latino / Spanisch; Karneval / Deutsch; Englisch / International.
+- Mobile: three horizontal scroll-snap panels, one screen wide, swipe left or right.
+- Rows sorted by original entry timestamp. Each displays stable ordinal position, song title, artist, guest names, +N duplicates and “Gespielt”.
+- Played changes the existing `played` flag; no song record is deleted.
+- The DJ can move songs between categories; the original timestamp and guest names are unchanged.
+- Rule-based automatic categorization is intentionally conservative; unknown songs default to International. No paid catalog metadata or third-party song lookup is used.
+- DJ evening selector allows past evenings to be viewed until retention deletes them.
+- TXT export reads **all server-returned rows of the selected evening**, even if the UI hides played songs. Similar songs across separate 60-minute batches are combined for export.
+- Existing Supabase Auth/DJ account remain unchanged.
+
+## Automated cleanup: one manual GitHub setup step
+
+After applying the migration, add a GitHub Actions **repository secret** named
+`SUPABASE_SERVICE_ROLE_KEY` at
+[Settings → Secrets and variables → Actions](https://github.com/pixa2001/Musicrequest/settings/secrets/actions).
+
+Paste your **Supabase service_role secret** there, and **never** in a GitHub source file,
+chat message, or browser JavaScript. This secret is only read by the scheduled GitHub runner.
+The workflow file is `.github/workflows/cleanup.yml`; it runs daily at 10:17 UTC and may
+also be launched manually under **Actions → Delete expired DJ evenings → Run workflow**.
+
+The SQL deletion RPC is limited to requests authenticated with the service role.
+It deletes a DJ evening only if its `ends_at` is **more than seven days in the past**
+AND no associated request was submitted within the last seven days.
+It then deletes requests, groups and the empty DJ-evening record, in that order.
+Never run cleanup manually before exporting an evening you need to retain.
+
+**GitHub scheduled workflows can run late or be temporarily disabled due to inactivity.**
+The exact cleanup instant is therefore not guaranteed; the seven-day rule is a minimum
+retention period, not a precise deletion deadline.
+
+## Testing checklist (after SQL migration)
+
+1. Submit a test song through the public guest form. Confirm success.
+2. Log in to the DJ dashboard and verify it appears in the appropriate column.
+3. Change category in its dropdown; confirm no loss of timestamp/names.
+4. Submit same song from another browser within 60 min; confirm +1 and original position.
+5. Submit from the SAME browser again within 30 seconds; confirm cooldown.
+6. Click Gespielt: row is hidden; toggle “Gespielte anzeigen” and verify it remains.
+7. Export TXT and confirm played songs included.
+8. Use mobile width: swipe horizontally across all three columns.
+9. To test cleanup safely, first run a SELECT (not a DELETE) in the SQL Editor:
+   `select id,session_date,ends_at from public.dj_events order by session_date desc;`
+   Then manually trigger the workflow; *do not forge the database clock or set existing event dates into the past*.
+
+No real login credentials or database password should be added to this public repository.
+
+## Notes
+
+Frontend Javascript syntax can be checked independently, but full end-to-end tests require
+the live Supabase SQL migration and a DJ login. Do not assume the server-side features work
+until those tests pass.
