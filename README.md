@@ -1,5 +1,27 @@
 # Taberna Flamenca · Musicrequest
 
+## New guest form: Taberna logo and compulsory category (November 2026)
+
+The public request form uses the supplied Taberna Flamenca logo and three **required**
+buttons under Song Title: **KARNEVAL**, **SPANISH/LATINO**, **ENGLISH/OTHER**.
+Unlike previous automatic categorization, the guest's explicit choice now
+determines the song's initial DJ category.
+
+**Required database update**: after the existing `20261105_dj_upgrade.sql` migration,
+open [`supabase/migrations/20261105_guest_category.sql`](supabase/migrations/20261105_guest_category.sql),
+copy the **complete raw SQL file** to a new query in the existing Supabase SQL Editor,
+and click Run. You only need this new migration, **not** the previous schema/migration.
+
+This creates `submit_song_request_v3`, validates the guest-selected category on the
+server, enforces the existing 30-second limit, and prevents matching duplicate
+requests across different selected categories. Existing records and DJ credentials
+remain unchanged. It also revokes public submission access to the old RPCs.
+
+Until this new SQL is applied, the new guest form cannot send song requests.
+Check that SQL Editor shows Success and submit one test song for each category.
+The DJ can still manually move an incoming song without changing its request time.
+
+
 Existing QR song-request app, now extended with a three-category DJ dashboard.
 GitHub Pages frontend: https://pixa2001.github.io/Musicrequest/
 DJ login: https://pixa2001.github.io/Musicrequest/dj/
