@@ -1,0 +1,25 @@
+name: Delete expired DJ evenings
+on:
+  schedule:
+    - cron: "17 10 * * *"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete DJ evenings older than seven days after the end
+        env:
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          if [ -z "$SUPABASE_SERVICE_ROLE_KEY" ]; then
+            echo "Missing SUPABASE_SERVICE_ROLE_KEY repository secret; nothing deleted."
+            exit 1
+          fi
+          curl --fail-with-body --silent --show-error --retry 2 \
+            -X POST 'https://ovxdgojtpnrzdjalyurj.supabase.co/rest/v1/rpc/delete_expired_dj_events' \
+            -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" \
+            -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
+            -H 'Content-Type: application/json' \
+            --data '{}'
