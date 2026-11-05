@@ -7,9 +7,21 @@ form.addEventListener("submit",async e=>{
  try{
   if(!guest_name||!song_title||!artist) throw new Error("Please complete all three fields.");
   const client=await getClient();
-  const {error}=await client.rpc("submit_song_request",{p_guest_name:guest_name,p_song_title:song_title,p_artist:artist});
+  let guestToken=localStorage.getItem("musicrequest-guest-token");
+  if(!guestToken){
+   guestToken=crypto.randomUUID();
+   localStorage.setItem("musicrequest-guest-token",guestToken);
+  }
+  const {error}=await client.rpc("submit_evening_song_request",{
+   p_guest_name:guest_name,p_song_title:song_title,p_artist:artist,p_guest_token:guestToken
+  });
   if(error) throw error;
   form.reset();message("Thanks! Your song request has been sent.","success");
- }catch(err){console.error(err);message("Couldn't send your request. "+(err?.message||"Please try again or ask the DJ."),"error")}
+ }catch(err){
+  if(err?.code==="P0030"){
+   message("Bitte warte einen Moment, bevor du deinen nächsten Musikwunsch abschickst.","error");
+   return;
+  }
+  console.error(err);message("Couldn't send your request. "+(err?.message||"Please try again or ask the DJ."),"error")}
  finally{button.disabled=false}
 });

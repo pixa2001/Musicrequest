@@ -21,7 +21,7 @@ Requests for the same song/artist within **60 minutes of the FIRST request** are
 **Important:** This repository is an initial implementation, not a deployed or fully configured service. Requests will not be sent until Supabase is configured.
 
 ## How it works
-- Guest form calls the Supabase `submit_song_request` RPC (anonymous insert; no guest reads).
+- Guest form calls the Supabase `submit_evening_song_request` RPC (anonymous insert; no guest reads).
 - DJ signs in with Supabase Auth; authorized DJ accounts can call read/update RPCs.
 - Dashboard subscribes to realtime `song_requests` inserts, refreshing automatically. Refresh button is provided as fallback.
 - Song data and guest names are kept in the backend, never shared with guests.
@@ -29,6 +29,16 @@ Requests for the same song/artist within **60 minutes of the FIRST request** are
 
 ## Operational notes
 - Use a dedicated project and strong password.
-- Implement anti-spam / rate limits (e.g. CAPTCHA, edge function, gateway) before a large public event; public anonymous write endpoints can be abused.
-- Consider retention and privacy notices for guest names; add an easy way to clear an event's data after the party.
 - Fuzzy matching is approximate, not authoritative song identity verification.
+
+## Upgrade eines bestehenden Projekts
+
+1. Backup erstellen und die Schritte zunächst in einem Testprojekt durchführen. Bei einer bestehenden Installation nur `supabase/migrations/202611050001_dj_evenings.sql` ausführen. Bei einer Neuinstallation zuerst `supabase/schema.sql` und dann die Migration ausführen.
+2. Die aktualisierten Seiten veröffentlichen. Im Gästeformular einen Wunsch senden, mit dem vorhandenen DJ-Konto anmelden und Kategorie, Gespielt-Status und TXT-Export prüfen.
+3. Nach erfolgreichem Seitenwechsel `supabase/operations/disable_legacy_submission.sql` im SQL Editor ausführen. Bis zu diesem Schritt kann der alte öffentliche Einreichungsweg die Sperre umgehen. Bereits geöffnete ältere Gästeseiten danach neu laden.
+4. Im DJ-Dashboard den Abend am Veranstaltungsende über **Abend beenden** abschließen. Der nächste erfolgreiche Wunsch eröffnet automatisch einen neuen Abend. Der Export verwendet den ausgewählten Abend und das Datum des ersten Wunsches in der Zeitzone Europa/Berlin. Bei exakten normalisierten Duplikaten im Export zählt die Kategorie des frühesten Eintrags.
+5. Für die optionale automatische Bereinigung in Supabase Cron aktivieren, die Kandidaten mit `supabase/operations/retention_preview.sql` prüfen und erst dann `supabase/operations/enable_retention.sql` ausführen. Der Job prüft stündlich und löscht offene wie gespielte Wünsche eines abgeschlossenen Abends frühestens 168 Stunden nach seinem Ende. Zum Abschalten den Job `musicrequest-expired-evenings` im Cron-Dashboard entfernen.
+
+Bereits vorhandene Wünsche erscheinen unter **Bestandswünsche** und werden ohne bestätigte Abendzuordnung von der automatischen Löschung ausgenommen. Die 30-Sekunden-Sperre verwendet eine zufällige Kennung pro Browserprofil. Sie speichert weder IP-Adressen noch Gästenamen in der Sperrtabelle. Wer den lokalen Speicher löscht oder ein anderes Browserprofil verwendet, kann eine neue Kennung erhalten. Die Kategorisierung verwendet eine kleine Liste bekannter Titel und Interpreten. Unklare Fälle landen bei Englisch / International.
+
+Das Zeitfenster beginnt mit dem ersten Wunsch und endet nach genau 60 Minuten. Ab diesem Zeitpunkt wird ein neuer Eintrag angelegt.
