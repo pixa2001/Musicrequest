@@ -12,24 +12,22 @@ form.addEventListener("submit",async e=>{
  const guest_name=document.querySelector("#guest").value.trim();
  const song_title=document.querySelector("#title").value.trim();
  const artist=document.querySelector("#artist").value.trim();
+ const category=document.querySelector('input[name="category"]:checked')?.value;
  try{
-  if(!guest_name||!song_title||!artist)throw new Error("Please complete all three fields.");
+  if(!guest_name||!song_title||!artist||!category)throw new Error("Please complete all fields and choose a music category.");
   const client=await getClient();
-  const result=await client.rpc("submit_song_request_v2",{
-    p_guest_name:guest_name,p_song_title:song_title,p_artist:artist,p_client_token:getBrowserToken()
+  const {error}=await client.rpc("submit_song_request_v3",{
+    p_guest_name:guest_name,p_song_title:song_title,p_artist:artist,
+    p_client_token:getBrowserToken(),p_category:category
   });
-  if(result.error){
-   // Guest form stays operational while DJ is applying the additive DB migration.
-   if(result.error.code==="PGRST202"||result.error.code==="42883"){
-     const fallback=await client.rpc("submit_song_request",{p_guest_name:guest_name,p_song_title:song_title,p_artist:artist});
-     if(fallback.error)throw fallback.error;
-   }else throw result.error;
-  }
+  if(error)throw error;
   form.reset();message("Thanks! Your song request has been sent.","success");
  }catch(err){
   console.error(err);
   if(err?.message?.includes("RATE_LIMIT")){
     message("Please wait a moment before sending your next song request.","error");
+  }else if(err?.code==="PGRST202"||err?.code==="42883"||err?.message?.includes("Could not find the function")){
+    message("Song requests are temporarily unavailable while the DJ completes setup. Please try again shortly.","error");
   }else{
     message("Couldn't send your request. Please try again or ask the DJ.","error");
   }
