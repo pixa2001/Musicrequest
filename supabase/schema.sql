@@ -49,7 +49,7 @@ grant execute on function public.is_dj() to authenticated;
 -- Only the server-side RPC accepts guest submissions.
 -- Requests are compared against groups younger than 60 minutes, anchored at first request.
 create or replace function public.submit_song_request(p_guest_name text,p_song_title text,p_artist text)
-returns void language plpgsql security definer set search_path = '' as $$
+returns void language plpgsql security definer set search_path = 'pg_catalog, public, extensions' as $
 declare
  n_song text := public.normalize_music_text(p_song_title);
  n_artist text := public.normalize_music_text(p_artist);
