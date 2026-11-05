@@ -1,0 +1,143 @@
+/* Taberna Flamenca · DJ Dashboard
+   Quiet dark analytics look: ink, graphite, amber and restrained glass.
+   Only loaded by /dj/, leaving the guest request form untouched. */
+:root{color-scheme:dark}
+body:has(.dashboard){
+  color:#f5f6f7;
+  background:
+    radial-gradient(ellipse 70% 45% at 75% -10%,rgba(45,54,69,.32),transparent 78%),
+    radial-gradient(ellipse 44% 31% at 7% 90%,rgba(149,82,19,.10),transparent 86%),
+    #090c11;
+}
+.dashboard{max-width:1680px;padding:38px clamp(18px,3vw,44px) 36px}
+.dash-header{align-items:center;gap:24px;margin-bottom:28px}
+.dash-brand{display:flex;align-items:center;gap:24px;min-width:0}
+.dj-brand-logo{
+  display:block;flex:0 0 auto;
+  width:clamp(72px,7vw,106px);height:clamp(72px,7vw,106px);
+  object-fit:contain;border-radius:50%;background:transparent;
+}
+.dash-brand-copy{border-left:1px solid rgba(222,163,87,.44);padding-left:24px;min-width:0}
+.dash-brand-copy h1{font-size:clamp(1.65rem,2.5vw,2.5rem);line-height:1.13;letter-spacing:-.045em;font-weight:750;color:#fff;margin:0 0 8px}
+.dash-brand-copy .subtitle{font-size:clamp(.8rem,1.15vw,1rem);color:#9fa5af;margin:0;line-height:1.4}
+.header-actions{flex-wrap:wrap}
+.status{
+  font-size:.82rem;font-weight:600;letter-spacing:.015em;
+  border-radius:99px;padding:9px 16px;
+  color:#d3d7dc;background:rgba(31,39,49,.74);
+  border:1px solid rgba(142,151,162,.25);
+}
+.status.connected{color:#98e1b2;background:rgba(29,75,46,.19);border-color:rgba(91,199,127,.39)}
+.status.connected:before{content:"";display:inline-block;width:7px;height:7px;margin-right:9px;background:#5bd283;border-radius:50%;box-shadow:0 0 8px rgba(91,210,131,.45)}
+.dashboard button.secondary,
+.dashboard .toolbar select,.dashboard .category-select,
+.dashboard .mark{
+  font:inherit;
+  background:linear-gradient(145deg,rgba(46,53,62,.86),rgba(25,30,37,.87));
+  color:#f2f3f5;border:1px solid rgba(153,163,174,.25);
+  border-radius:12px;padding:9px 13px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.055);
+}
+.dashboard button.secondary:hover,.dashboard .mark:hover{border-color:rgba(244,169,77,.63);background:#30343b}
+.dashboard button:focus-visible,.dashboard select:focus-visible,.dashboard input:focus-visible{outline:2px solid #e9a04b;outline-offset:3px}
+.dashboard button:disabled{cursor:not-allowed}
+.panel,.toolbar,.music-column{
+  backdrop-filter:blur(18px) saturate(115%);
+  -webkit-backdrop-filter:blur(18px) saturate(115%);
+}
+.panel{
+  background:linear-gradient(145deg,rgba(34,39,48,.86),rgba(18,23,30,.90));
+  border:1px solid rgba(154,163,173,.21);
+  border-radius:22px;box-shadow:0 20px 44px rgba(0,0,0,.23);
+}
+.login h2{font-size:1.35rem;font-weight:690}
+.login input:not([type=checkbox]){
+  background:#11171f;border:1px solid rgba(146,155,168,.33);
+  border-radius:11px;color:#fff;
+}
+.login input:focus{border-color:#efac5d;box-shadow:0 0 0 3px rgba(239,172,93,.13)}
+.login button[type=submit]{background:linear-gradient(125deg,#f2b76b,#e5963f);color:#19130d}
+.toolbar{
+  display:flex;align-items:center;gap:20px;flex-wrap:wrap;
+  padding:16px 19px;margin:0 0 24px;
+  border-radius:18px;
+  background:linear-gradient(140deg,rgba(40,45,54,.77),rgba(24,29,36,.80));
+  border:1px solid rgba(162,169,177,.23);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.045),0 14px 35px rgba(0,0,0,.16);
+}
+#request-count{font-size:1.03rem;font-weight:680;color:#f4f5f6}
+.meta{font-size:.76rem;line-height:1.45;color:#959faa;margin:6px 0 0}
+.toolbar-actions{margin-left:auto;gap:10px}
+.event-label,.checkbox-label{color:#c7cbd0}
+.checkbox-label{display:inline-flex;align-items:center;gap:5px;font-size:.82rem;cursor:pointer}
+.checkbox-label input{accent-color:#e9a04b}
+#dj-feedback{color:#f3b56c}
+.request-columns{gap:16px;grid-template-columns:repeat(3,minmax(0,1fr))}
+.music-column{
+  background:linear-gradient(152deg,rgba(31,36,44,.87),rgba(19,24,30,.96) 60%,rgba(25,28,33,.95));
+  border:1px solid rgba(150,158,169,.26);border-radius:22px;
+  box-shadow:0 22px 52px rgba(0,0,0,.24),inset 0 1px 0 rgba(255,255,255,.045);
+}
+.music-column h2{
+  margin:0;padding:19px 18px;
+  color:#f9fafb;background:linear-gradient(115deg,rgba(242,168,77,.11),rgba(38,44,53,.48) 75%);
+  font-size:clamp(.94rem,1.15vw,1.12rem);font-weight:700;
+  border-bottom:1px solid rgba(209,150,77,.20);
+  position:relative;
+}
+.music-column h2:before{content:"";position:absolute;left:0;top:18%;bottom:18%;width:3px;border-radius:3px;background:#dc9b4b;opacity:.85}
+.music-column[data-category="german"] h2:before{background:#bc8850}
+.music-column[data-category="international"] h2:before{background:#b9a17b}
+.category-items{min-height:115px}
+.category-items .request{
+  padding:17px 16px;gap:12px;
+  border-bottom:1px solid rgba(156,165,174,.13);
+  background:transparent;transition:background-color .14s ease;
+}
+.category-items .request:last-child{border-bottom:none}
+.category-items .request:hover{background:rgba(255,255,255,.027)}
+.category-items .request.done{opacity:.53}
+.category-items .number{font-variant-numeric:tabular-nums;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.88rem;color:#9a9fa8;padding-top:4px}
+.song-title{font-size:.99rem;font-weight:690;color:#fafafa;line-height:1.35}
+.artist{font-size:.85rem;color:#bcc1c7;margin-top:4px}
+.requesters{font-size:.78rem;color:#929ba5;margin-top:8px;line-height:1.4}
+.song-details .row-side{margin-top:12px;gap:9px;flex-wrap:wrap}
+.plus{
+  background:rgba(225,153,64,.14);color:#f0b568;
+  border:1px solid rgba(218,157,82,.23);font-size:.74rem;
+  padding:5px 9px;font-variant-numeric:tabular-nums;
+}
+.dashboard .mark{padding:7px 12px;font-size:.77rem;border-radius:10px;min-height:34px}
+.dashboard .category-select{
+  display:block;width:100%;margin-top:11px;
+  color:#cdd2d9;background:#1c222b;font-size:.78rem;
+  padding:9px 11px;border-radius:10px;
+}
+.empty{color:#8f99a5;padding:28px 15px;font-size:.88rem}
+.dashboard-foot{color:#767f89;margin-top:22px}
+.mobile-swipe-hint{color:#909aa5}
+@media(max-width:950px){
+  .dashboard{padding:25px 17px}
+  .dash-header{align-items:flex-start}
+  .dash-brand{gap:14px}
+  .dash-brand-copy{padding-left:16px}
+  .toolbar-actions{justify-content:flex-start;margin-left:0}
+  .toolbar{gap:15px}
+}
+@media(max-width:760px){
+  .dashboard{padding:19px 0}
+  .dash-header{padding:0 15px;margin-bottom:22px;align-items:center;flex-wrap:wrap}
+  .dj-brand-logo{width:64px;height:64px}
+  .dash-brand-copy{padding-left:13px}
+  .dash-brand-copy h1{font-size:1.53rem}
+  .dash-brand-copy .subtitle{font-size:.76rem}
+  .header-actions{margin-left:auto}
+  .toolbar{margin:0 12px 20px;border-radius:16px;padding:14px}
+  .request-columns{display:flex;gap:0;overflow-x:auto;scroll-snap-type:x mandatory;overscroll-behavior-x:contain}
+  .music-column{flex:0 0 100%;width:100%;scroll-snap-align:start;border-left:0;border-right:0;border-radius:0;min-height:280px}
+  .music-column h2{position:sticky;top:0;z-index:1}
+  #dj-feedback{padding:0 14px}
+}
+@media(prefers-reduced-motion:reduce){
+  .category-items .request{transition:none}
+}
