@@ -1,3 +1,4 @@
+import {spotifyButton,setSpotifyDJSession} from "./spotify-ui.js";
 import {getClient,configured} from "./client.js";
 const $=s=>document.querySelector(s);
 const loginPanel=$("#login-panel"),requestPanel=$("#request-panel"),logout=$("#logout");
@@ -9,6 +10,7 @@ let selectedDate=null,lastCalendarDate=null;
 function feedback(text){$("#dj-feedback").textContent=text;}
 function setFeedback(text){loginFeedback.textContent=text;loginFeedback.className="feedback error";}
 function ready(user){
+ setSpotifyDJSession(user);
  loginPanel.classList.toggle("hidden",!!user);
  requestPanel.classList.toggle("hidden",!user);
  logout.classList.toggle("hidden",!user);
@@ -47,7 +49,7 @@ function display(){
    played.setAttribute("aria-label",(row.played?"Wieder öffnen: ":"Als gespielt markieren: ")+row.song_title);
    played.title=row.played?"Wieder öffnen":"Als gespielt markieren";
    played.addEventListener("click",()=>markPlayed(row.id,!row.played));
-   side.append(played);detail.append(side);
+   side.append(spotifyButton(row),played);detail.append(side);
    article.append(detail);list.append(article);
   }
  }
