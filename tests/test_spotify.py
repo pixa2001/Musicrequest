@@ -10,7 +10,7 @@ from playwright.sync_api import sync_playwright
 ROOT=Path(__file__).resolve().parents[1]
 ID='a'*32
 MOCK='''export const configured=true;let played=false,change=()=>{};window.emitAuth=e=>change(e,null);export async function getClient(){return {auth:{getUser:async()=>({data:{user:{id:'dj'}}}),onAuthStateChange:f=>change=f,signOut:async()=>change('SIGNED_OUT',null)},rpc:async(name,args)=>{if(name==='dj_event_list')return {data:[{id:42,session_date:new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Berlin'}).format(new Date())}]};if(name==='dj_mark_request_played'){played=args.p_played;return {}}return {data:[{id:1,position:1,song_title:'Bailando',artist:'Enrique Iglesias',category:'latino',request_count:2,guest_names:['Ana'],played,first_requested_at:'2026-11-05T20:00:00Z'}]}},channel:()=>({on(){return this},subscribe(){return this}}),removeChannel:async()=>{}}}'''
-TRACK={'id':'track1','type':'track','name':'Bailando','artists':[{'name':'Enrique Iglesias'}],'album':{'images':[{'url':'https://i.scdn.co/image/test'}]},'external_urls':{'spotify':'https://open.spotify.com/track/track1'}}
+TRACK={'id':'track1','type':'track','uri':'spotify:track:track1','name':'Bailando','artists':[{'name':'Enrique Iglesias'}],'album':{'images':[{'url':'https://i.scdn.co/image/test'}]},'external_urls':{'spotify':'https://open.spotify.com/track/track1'}}
 class Quiet(SimpleHTTPRequestHandler):
  def log_message(self,*_):pass
 class SpotifyTests(unittest.TestCase):
@@ -35,7 +35,7 @@ class SpotifyTests(unittest.TestCase):
  def open(self):self.page.locator('.spotify-song-button').click()
  def pending(self,age=0):self.page.evaluate('([id,age,uri])=>sessionStorage.setItem("musicrequest.spotify.pkce",JSON.stringify({clientId:id,state:"expected",verifier:"v".repeat(64),createdAt:Date.now()-age,redirectUri:uri}))',[ID,age,self.base+'/dj/spotify-callback.html'])
  def test_search_selection_and_dashboard(self):
-  self.session();self.open();self.page.locator('.spotify-result').wait_for();self.assertEqual(parse_qs(urlparse(self.searches[0].url).query)['q'],['Bailando Enrique Iglesias']);self.page.locator('input[name=spotify-track]').check();self.assertIn('Ausgewählt: Bailando',self.page.locator('.spotify-selected').inner_text());self.assertEqual(self.page.locator('button:has-text("Zur Spotify-Playlist hinzufügen")').count(),0)
+  self.session();self.open();self.page.locator('.spotify-result').wait_for();self.assertEqual(parse_qs(urlparse(self.searches[0].url).query)['q'],['Bailando Enrique Iglesias']);self.page.locator('input[name=spotify-track]').check();self.assertIn('Ausgewählt: Bailando',self.page.locator('.spotify-selected').inner_text());self.assertTrue(self.page.get_by_role('button',name='Zur Spotify-Playlist hinzufügen',exact=True).is_disabled())
   self.page.get_by_role('button',name='Schließen',exact=True).click();self.page.get_by_role('button',name='Als gespielt markieren: Bailando',exact=True).click();self.page.wait_for_function('document.querySelector("#open-count").textContent==="0"');self.page.locator('#show-done').check()
   with self.page.expect_download() as download:self.page.locator('#export').click()
   self.assertIn('Bailando',Path(download.value.path()).read_text(encoding='utf-8-sig'));self.assertEqual(self.page.locator('.category-select').count(),0)
@@ -67,7 +67,7 @@ class SpotifyTests(unittest.TestCase):
  def test_pkce_round_trip_and_replay(self):
   self.page.route('https://accounts.spotify.com/authorize?*',lambda r:r.fulfill(content_type='text/html',body='Test OAuth'));self.open()
   with self.page.expect_navigation():self.page.get_by_role('button',name='Mit Spotify verbinden',exact=True).click()
-  params=parse_qs(urlparse(self.page.url).query);self.assertEqual(params['code_challenge_method'],['S256']);self.assertNotIn('scope',params)
+  params=parse_qs(urlparse(self.page.url).query);self.assertEqual(params['code_challenge_method'],['S256']);self.assertIn('playlist-modify-private',params['scope'][0])
   self.page.goto(self.base+'/dj/');pending=self.page.evaluate('JSON.parse(sessionStorage.getItem("musicrequest.spotify.pkce"))');digest=base64.urlsafe_b64encode(hashlib.sha256(pending['verifier'].encode()).digest()).decode().rstrip('=');self.assertEqual(params['code_challenge'],[digest])
   self.page.goto(self.base+'/dj/spotify-callback.html?code=fake-code&state='+pending['state']);self.page.wait_for_url(self.base+'/dj/');self.assertEqual(self.tokens[0]['code_verifier'],[pending['verifier']]);self.assertNotIn('client_secret',self.tokens[0]);self.assertIsNone(self.page.evaluate('sessionStorage.getItem("musicrequest.spotify.pkce")'))
   self.page.goto(self.base+'/dj/spotify-callback.html?code=fake-code&state='+pending['state']);self.page.locator('#spotify-callback-status').filter(has_text='nicht sicher').wait_for();self.assertEqual(len(self.tokens),1);self.assertNotIn('code=',self.page.url)
@@ -81,4 +81,46 @@ class SpotifyTests(unittest.TestCase):
   self.session();self.open();self.page.locator('.spotify-result').wait_for();self.page.evaluate('window.emitAuth("SIGNED_OUT")');self.assertFalse(self.page.locator('.spotify-dialog').is_visible());self.assertIsNone(self.page.evaluate('sessionStorage.getItem("musicrequest.spotify.session")'));self.assertFalse(self.page.locator('#request-panel').is_visible())
  def test_mobile_keyboard(self):
   self.page.set_viewport_size({'width':390,'height':844});self.session();self.open();self.page.locator('.spotify-result').wait_for();self.assertTrue(self.page.evaluate('document.documentElement.scrollWidth<=innerWidth'));self.assertTrue(self.page.locator('.spotify-dialog').evaluate('(e)=>e.scrollWidth<=e.clientWidth'));self.page.keyboard.press('Escape');self.assertFalse(self.page.locator('.spotify-dialog').is_visible())
+ def playlist_fixture(self,named=True,duplicate=False,paged=False):
+  self.session()
+  self.page.evaluate("()=>{const key='musicrequest.spotify.session',value=JSON.parse(sessionStorage.getItem(key));value.scope='playlist-read-private playlist-modify-private playlist-modify-public user-read-private';sessionStorage.setItem(key,JSON.stringify(value));}")
+  writes=[]
+  own={'id':'playlist1','name':'Taberna Flamenca – Requests' if named else 'Andere Playlist','owner':{'id':'owner'}}
+  self.page.route('https://api.spotify.com/v1/me',lambda r:r.fulfill(json={'id':'owner'}))
+  def playlists(r):
+   if r.request.method=='POST':
+    writes.append(('create',r.request.post_data_json));r.fulfill(status=201,json={**own,'name':'Taberna Flamenca – Requests'})
+   else:r.fulfill(json={'items':[own,{'id':'foreign','name':'Fremde Playlist','owner':{'id':'other'}}],'next':None})
+  self.page.route('https://api.spotify.com/v1/me/playlists**',playlists)
+  def items(r):
+   if r.request.method=='POST':writes.append(('add',r.request.post_data_json));r.fulfill(status=201,json={'snapshot_id':'test'})
+   elif paged and 'offset=50' not in r.request.url:r.fulfill(json={'items':[],'next':'https://api.spotify.com/v1/playlists/playlist1/items?offset=50'})
+   else:r.fulfill(json={'items':[{'item':TRACK}] if duplicate else [],'next':None})
+  self.page.route('https://api.spotify.com/v1/playlists/playlist1/items**',items)
+  return writes
+ def choose_track(self):
+  self.open();self.page.locator('.spotify-result').wait_for();self.page.locator('input[name=spotify-track]').check()
+ def load_target(self):
+  self.page.get_by_role('button',name='Playlists laden',exact=True).click();self.page.locator('#spotify-playlist option[value=playlist1]').wait_for(state='attached')
+ def test_playlist_add_and_double_click(self):
+  writes=self.playlist_fixture();self.choose_track();self.load_target()
+  self.assertEqual(self.page.locator('#spotify-playlist option[value=foreign]').count(),0)
+  self.page.get_by_role('button',name='Zur Spotify-Playlist hinzufügen',exact=True).dblclick()
+  self.page.locator('.spotify-status').filter(has_text='wurde zu').wait_for()
+  self.assertEqual(writes,[('add',{'uris':['spotify:track:track1']})])
+ def test_playlist_duplicate_on_later_page(self):
+  writes=self.playlist_fixture(duplicate=True,paged=True);self.choose_track();self.load_target();self.page.get_by_role('button',name='Zur Spotify-Playlist hinzufügen',exact=True).click();self.page.locator('.spotify-status').filter(has_text='kein Duplikat').wait_for();self.assertEqual(writes,[])
+ def test_playlist_create_private(self):
+  writes=self.playlist_fixture(named=False);self.open();self.page.get_by_role('button',name='Requests-Playlist anlegen / auswählen',exact=True).click();self.page.locator('.spotify-status').filter(has_text='Requests-Playlist ausgewählt').wait_for();self.assertEqual(writes[0][0],'create');self.assertEqual(writes[0][1]['public'],False);self.assertEqual(self.page.locator('#spotify-playlist').input_value(),'playlist1')
+ def test_playlist_reuse_existing(self):
+  writes=self.playlist_fixture();self.open();self.page.get_by_role('button',name='Requests-Playlist anlegen / auswählen',exact=True).click();self.page.locator('.spotify-status').filter(has_text='Requests-Playlist ausgewählt').wait_for();self.assertEqual(writes,[])
+ def test_playlist_requires_new_consent(self):
+  self.session();self.open();self.page.get_by_role('button',name='Playlists laden',exact=True).click();self.page.locator('.spotify-status').filter(has_text='zusätzlichen Playlist-Berechtigungen').wait_for()
+ def test_playlist_uncertain_write_not_retried(self):
+  self.playlist_fixture();calls=[]
+  def items(r):
+   if r.request.method=='POST':calls.append(1);r.abort('internetdisconnected')
+   else:r.fulfill(json={'items':[],'next':None})
+  self.page.route('https://api.spotify.com/v1/playlists/playlist1/items**',items)
+  self.choose_track();self.load_target();self.page.get_by_role('button',name='Zur Spotify-Playlist hinzufügen',exact=True).click();self.page.locator('.spotify-status').filter(has_text='möglicherweise ausgeführt').wait_for();self.assertEqual(len(calls),1)
 if __name__=='__main__':unittest.main()

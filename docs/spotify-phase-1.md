@@ -1,5 +1,7 @@
 # Spotify – Phase 1 (Entwicklungsbranch)
 
+Historische Phase-1-Anleitung. Für den aktuellen Stand mit Playlist-Übernahme siehe [Phase 2](spotify-phase-2.md).
+
 Status: Anmeldung und Suche implementiert, mit simulierten APIs getestet. Keine Playlist-Schreibzugriffe und keine Wiedergabe. Echte Spotify-Anmeldung benötigt eine eigene Client-ID und Spotify-Freigabe. Kein Merge nach `main` ohne Freigabe.
 
 ## Analyse des bestehenden Projekts

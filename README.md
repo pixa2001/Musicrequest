@@ -102,8 +102,9 @@ Frontend Javascript syntax can be checked independently, but full end-to-end tes
 the live Supabase SQL migration and a DJ login. Do not assume the server-side features work
 until those tests pass.
 
-## Spotify Phase 1 (development branch)
+## Spotify (development branch)
 
 Optional DJ-only PKCE login and track search are described in
-[docs/spotify-phase-1.md](docs/spotify-phase-1.md). No playlist writes or playback
-are implemented in this phase. Do not merge to `main` without explicit review.
+[docs/spotify-phase-1.md](docs/spotify-phase-1.md). Playlist selection, creation and
+confirmed track additions are described in [docs/spotify-phase-2.md](docs/spotify-phase-2.md).
+No playback or direct djay automation is implemented. Do not merge to `main` without explicit review.
