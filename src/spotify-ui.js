@@ -1,6 +1,6 @@
 import {settings,saveClientId,connected,authorize,disconnect,searchTracks,playlistPermission,loadPlaylists,createRequestPlaylist,addTrackToPlaylist} from "./spotify-api.js";
 let djReady=false,dialog,connectButton,status,results,searchInput,searchButton,selectedStatus,controller,focusBefore;
-let playlistSelect,playlistReload,playlistCreate,addButton,chosenTrack=null,playlistBusy=false,viewVersion=0;
+let playlistStatus,playlistSelect,playlistReload,playlistCreate,addButton,chosenTrack=null,playlistBusy=false,viewVersion=0;
 function element(tag,className,text){const node=document.createElement(tag);if(className)node.className=className;if(text!==undefined)node.textContent=text;return node;}
 export function spotifyIcon(){
  const svg=document.createElementNS("http://www.w3.org/2000/svg","svg");svg.setAttribute("viewBox","0 0 24 24");svg.setAttribute("aria-hidden","true");
@@ -30,6 +30,7 @@ function mount(){
  const playlistSection=element("section","spotify-playlist");
  const playlistLabel=element("label","","Ziel-Playlist (eigene Playlists)");playlistLabel.htmlFor="spotify-playlist";
  playlistSelect=element("select");playlistSelect.id=playlistLabel.htmlFor;
+ playlistStatus=element("p","spotify-playlist-status");playlistStatus.setAttribute("role","status");
  playlistSelect.addEventListener("change",()=>{selectedStatus.textContent="";syncPlaylistButtons();});
  playlistReload=button("Playlists laden",()=>playlistAction(async()=>{
   const data=await loadPlaylists();fillPlaylists(data.playlists);
@@ -49,7 +50,7 @@ function mount(){
   });
  });
  const playlistActions=element("div","spotify-actions");playlistActions.append(playlistReload,playlistCreate);
- playlistSection.append(playlistLabel,playlistSelect,playlistActions,addButton);dialog.append(playlistSection);syncPlaylistButtons();
+ playlistSection.append(playlistLabel,playlistStatus,playlistSelect,playlistActions,addButton);dialog.append(playlistSection);fillPlaylists([]);playlistStatus.textContent="Bitte zuerst Playlists laden oder die Requests-Playlist anlegen.";syncPlaylistButtons();
  const source=element("a","spotify-source","Musikdaten von Spotify");source.href="https://open.spotify.com/";source.target="_blank";source.rel="noopener noreferrer";dialog.append(source);
  dialog.addEventListener("close",()=>{controller?.abort();viewVersion++;focusBefore?.focus();});document.body.append(dialog);
  connectButton=button("Spotify verbinden",()=>openSpotify());connectButton.classList.add("spotify-connect");document.querySelector(".dashboard-controls>div").prepend(connectButton);updateConnection();
@@ -81,6 +82,7 @@ async function runSearch(){
 function openSpotify(row){
  if(!djReady)return;mount();focusBefore=document.activeElement;
  controller?.abort();viewVersion++;resetSelection();searchButton.disabled=false;syncPlaylistButtons();
+ playlistStatus.textContent=playlistPermission()?"Bitte Playlists laden oder die Requests-Playlist anlegen.":"Für Playlist-Zugriff bitte erneut mit Spotify verbinden und die zusätzlichen Berechtigungen bestätigen.";
  searchInput.value=row?`${row.song_title} ${row.artist}`:"";
  dialog.querySelector("details").open=!settings().clientId;
  announce(connected()?"Spotify verbunden. Suche starten oder einen Song auswählen.":"Spotify ist noch nicht verbunden.");
@@ -115,10 +117,10 @@ function fillPlaylists(playlists){
 }
 async function playlistAction(action){
  if(!djReady||playlistBusy)return;
- if(!playlistPermission()){announce("Bitte „Mit Spotify verbinden“ anklicken und die zusätzlichen Playlist-Berechtigungen bestätigen.");return;}
+ if(!playlistPermission()){playlistStatus.textContent="Bitte „Mit Spotify verbinden“ anklicken und die zusätzlichen Playlist-Berechtigungen bestätigen.";announce(playlistStatus.textContent);return;}
  const version=viewVersion;
- playlistBusy=true;syncPlaylistButtons();announce("Spotify-Playlist wird geprüft …");
- try{const message=await action();if(dialog.open&&djReady&&version===viewVersion){selectedStatus.textContent=message;announce(message);}}
- catch(error){if(dialog.open&&djReady&&version===viewVersion)announce(error.message);}
+ playlistBusy=true;syncPlaylistButtons();playlistStatus.textContent="Spotify-Playlist wird geprüft …";announce(playlistStatus.textContent);
+ try{const message=await action();if(dialog.open&&djReady&&version===viewVersion){selectedStatus.textContent=message;playlistStatus.textContent=message;announce(message);}}
+ catch(error){if(dialog.open&&djReady&&version===viewVersion){playlistStatus.textContent=error.message;announce(error.message);}}
  finally{playlistBusy=false;syncPlaylistButtons();}
 }
