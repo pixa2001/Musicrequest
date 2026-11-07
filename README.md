@@ -101,3 +101,9 @@ No real login credentials or database password should be added to this public re
 Frontend Javascript syntax can be checked independently, but full end-to-end tests require
 the live Supabase SQL migration and a DJ login. Do not assume the server-side features work
 until those tests pass.
+
+## Spotify Phase 1 (development branch)
+
+Optional DJ-only PKCE login and track search are described in
+[docs/spotify-phase-1.md](docs/spotify-phase-1.md). No playlist writes or playback
+are implemented in this phase. Do not merge to `main` without explicit review.
