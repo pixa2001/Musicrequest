@@ -4,7 +4,7 @@ let refreshing=null,epoch=0;
 const read=key=>{try{return JSON.parse(sessionStorage.getItem(key)||"null");}catch{return null;}};
 export function settings(){
  let local={};try{local=JSON.parse(localStorage.getItem(SETTINGS)||"{}");}catch{}
- return {clientId:SPOTIFY_CLIENT_ID||local.clientId||"",redirectUri:SPOTIFY_REDIRECT_URI};
+ return {clientId:local.clientId||SPOTIFY_CLIENT_ID||"",redirectUri:SPOTIFY_REDIRECT_URI};
 }
 export function saveClientId(value){
  const clientId=value.trim();

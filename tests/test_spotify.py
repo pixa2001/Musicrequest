@@ -23,6 +23,7 @@ class SpotifyTests(unittest.TestCase):
   cls.browser.close();cls.pw.stop();cls.server.shutdown();cls.server.server_close()
  def setUp(self):
   self.context=self.browser.new_context(viewport={'width':1440,'height':1000},accept_downloads=True);self.page=self.context.new_page();self.tokens=[];self.searches=[]
+  self.page.route('**/src/spotify-config.js',lambda r:r.fulfill(content_type='application/javascript',body='export const SPOTIFY_CLIENT_ID="'+ID+'";export const SPOTIFY_REDIRECT_URI=new URL("../dj/spotify-callback.html",import.meta.url).href;'))
   self.page.route('**/src/client.js',lambda r:r.fulfill(content_type='application/javascript',body=MOCK));self.page.route('https://i.scdn.co/**',lambda r:r.fulfill(status=204));self.page.route('https://accounts.spotify.com/api/token',self.token);self.page.route('https://api.spotify.com/v1/search?*',self.search)
   self.page.goto(self.base+'/dj/');self.page.locator('.spotify-song-button').wait_for();self.page.evaluate('(id)=>localStorage.setItem("musicrequest.spotify.settings",JSON.stringify({clientId:id}))',ID)
  def tearDown(self):self.context.close()
