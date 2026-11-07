@@ -1,6 +1,7 @@
-import {settings,saveClientId,connected,authorize,disconnect,searchTracks,playlistPermission,loadPlaylists,createRequestPlaylist,addTrackToPlaylist} from "./spotify-api.js";
+import {settings,saveClientId,connected,authorize,disconnect,searchTracks,playlistPermission,loadPlaylists,createRequestPlaylist,addTrackToPlaylist,rememberPlaylist,quickTargetPlaylist} from "./spotify-api.js";
 let djReady=false,dialog,connectButton,status,results,searchInput,searchButton,selectedStatus,controller,focusBefore;
 let playlistStatus,playlistSelect,playlistReload,playlistCreate,addButton,chosenTrack=null,playlistBusy=false,viewVersion=0;
+let quickBusy=false,quickStatus,quickManual,quickRow=null,quickController,sessionVersion=0;
 function element(tag,className,text){const node=document.createElement(tag);if(className)node.className=className;if(text!==undefined)node.textContent=text;return node;}
 export function spotifyIcon(){
  const svg=document.createElementNS("http://www.w3.org/2000/svg","svg");svg.setAttribute("viewBox","0 0 24 24");svg.setAttribute("aria-hidden","true");
@@ -31,13 +32,13 @@ function mount(){
  const playlistLabel=element("label","","Ziel-Playlist (eigene Playlists)");playlistLabel.htmlFor="spotify-playlist";
  playlistSelect=element("select");playlistSelect.id=playlistLabel.htmlFor;
  playlistStatus=element("p","spotify-playlist-status");playlistStatus.setAttribute("role","status");
- playlistSelect.addEventListener("change",()=>{selectedStatus.textContent="";syncPlaylistButtons();});
+ playlistSelect.addEventListener("change",()=>{rememberPlaylist(playlistSelect.value);selectedStatus.textContent="";syncPlaylistButtons();});
  playlistReload=button("Playlists laden",()=>playlistAction(async()=>{
   const data=await loadPlaylists();fillPlaylists(data.playlists);
   return data.playlists.length?"Playlists geladen. Ziel-Playlist auswählen.":"Noch keine eigene Playlist gefunden. Du kannst die Requests-Playlist anlegen.";
  }));
  playlistCreate=button("Requests-Playlist anlegen / auswählen",()=>playlistAction(async()=>{
-  const playlist=await createRequestPlaylist();fillPlaylists([playlist]);
+  const playlist=await createRequestPlaylist();rememberPlaylist(playlist.id);fillPlaylists([playlist]);
   return "Requests-Playlist ausgewählt. Jetzt den gewünschten Titel hinzufügen.";
  }));
  addButton=button("Zur Spotify-Playlist hinzufügen",()=>{
@@ -53,6 +54,10 @@ function mount(){
  playlistSection.append(playlistLabel,playlistStatus,playlistSelect,playlistActions,addButton);dialog.append(playlistSection);fillPlaylists([]);playlistStatus.textContent="Bitte zuerst Playlists laden oder die Requests-Playlist anlegen.";syncPlaylistButtons();
  const source=element("a","spotify-source","Musikdaten von Spotify");source.href="https://open.spotify.com/";source.target="_blank";source.rel="noopener noreferrer";dialog.append(source);
  dialog.addEventListener("close",()=>{controller?.abort();viewVersion++;focusBefore?.focus();});document.body.append(dialog);
+ const quickNotice=element("div","spotify-quick-notice");
+ quickStatus=element("span");quickStatus.setAttribute("role","status");
+ quickManual=button("Manuell suchen",()=>openSpotify(quickRow));quickManual.hidden=true;
+ quickNotice.append(quickStatus,quickManual);document.querySelector(".dashboard-controls").after(quickNotice);
  connectButton=button("Spotify verbinden",()=>openSpotify());connectButton.classList.add("spotify-connect");document.querySelector(".dashboard-controls>div").prepend(connectButton);updateConnection();
 }
 async function runSearch(){
@@ -90,12 +95,40 @@ function openSpotify(row){
  if(row&&connected())runSearch();
 }
 export function spotifyButton(row){
- const node=button("",()=>openSpotify(row));node.classList.add("spotify-song-button");node.append(spotifyIcon());node.title="Auf Spotify suchen";node.setAttribute("aria-label",`Auf Spotify suchen: ${row.song_title} – ${row.artist}`);return node;
+ const node=button("",event=>{if(event.shiftKey)openSpotify(row);else quickAdd(row,node);});
+ node.classList.add("spotify-song-button");node.append(spotifyIcon());
+ node.title="Direkt zu Spotify hinzufügen · Umschalt+Klick: manuell suchen";
+ node.setAttribute("aria-label",`Direkt zu Spotify hinzufügen: ${row.song_title} – ${row.artist}`);return node;
+}
+async function quickAdd(row,node){
+ if(!djReady)return;mount();
+ if(quickBusy||playlistBusy){quickStatus.textContent="Eine Spotify-Übernahme läuft bereits. Bitte kurz warten.";return;}
+ quickRow=row;quickManual.hidden=false;
+ if(!playlistPermission()){openSpotify(row);announce("Für die direkte Übernahme bitte zuerst Spotify verbinden und die Playlist-Berechtigungen bestätigen.");return;}
+ const version=sessionVersion;
+ quickBusy=true;node.disabled=true;quickController=new AbortController();
+ quickStatus.textContent=`Suche „${row.song_title}“ auf Spotify …`;
+ try{
+  const tracks=await searchTracks(`${row.song_title} ${row.artist}`,{signal:quickController.signal});
+  if(!djReady||version!==sessionVersion)return;
+  const track=tracks.find(item=>/^spotify:track:[a-zA-Z0-9]+$/.test(item.uri||"")&&item.is_playable!==false);
+  if(!track){openSpotify(row);announce("Kein automatisch übernehmbarer Treffer. Bitte manuell suchen.");quickStatus.textContent="Kein Treffer – bitte manuell suchen.";return;}
+  const playlist=await quickTargetPlaylist();
+  if(!djReady||version!==sessionVersion)return;
+  quickStatus.textContent=`Übernehme „${track.name}“ in „${playlist.name}“ …`;
+  const result=await addTrackToPlaylist(playlist.id,track);
+  if(!djReady||version!==sessionVersion)return;
+  const artists=(track.artists||[]).map(a=>a.name).join(", ");
+  quickStatus.textContent=result.duplicate?`Bereits enthalten: ${track.name} – ${artists} · ${playlist.name}`:`Hinzugefügt: ${track.name} – ${artists} · ${playlist.name}`;
+  node.title=quickStatus.textContent+" · Umschalt+Klick: manuell suchen";
+ }catch(error){if(error.name!=="AbortError"&&djReady&&version===sessionVersion){quickStatus.textContent=error.message;}}
+ finally{quickBusy=false;node.disabled=false;}
 }
 export function setSpotifyDJSession(user){
+ sessionVersion++;quickController?.abort();
  djReady=Boolean(user);
  if(djReady){mount();updateConnection();}
- else{dialog?.close();disconnect();if(playlistSelect){playlistSelect.replaceChildren();resetSelection();}updateConnection();}
+ else{if(quickStatus){quickStatus.textContent="";quickManual.hidden=true;}dialog?.close();disconnect();if(playlistSelect){playlistSelect.replaceChildren();resetSelection();}updateConnection();}
 }
 
 function resetSelection(){
@@ -117,6 +150,7 @@ function fillPlaylists(playlists){
 }
 async function playlistAction(action){
  if(!djReady||playlistBusy)return;
+ if(quickBusy){announce("Eine direkte Spotify-Übernahme läuft. Bitte kurz warten.");return;}
  if(!playlistPermission()){playlistStatus.textContent="Bitte „Mit Spotify verbinden“ anklicken und die zusätzlichen Playlist-Berechtigungen bestätigen.";announce(playlistStatus.textContent);return;}
  const version=viewVersion;
  playlistBusy=true;syncPlaylistButtons();playlistStatus.textContent="Spotify-Playlist wird geprüft …";announce(playlistStatus.textContent);

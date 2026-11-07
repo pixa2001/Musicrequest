@@ -47,3 +47,13 @@ Die Tests simulieren Spotify und Supabase vollständig: PKCE, Refresh, Berechtig
 ## djay und Nutzung
 
 Diese Phase schreibt ausschließlich in eine Spotify-Playlist. Sie verändert keine laufende djay-Automix-Warteschlange und automatisiert keine Mausklicks. Playlist-Aktualisierung und Automix werden in Phase 3 auf deinem Mac getestet. Die aktuelle offizielle djay-Dokumentation sowie Spotify-Bedingungen für die geplante gewerbliche DJ-Nutzung sind noch zu prüfen; erfolgreiche API-Aufrufe ersetzen diese Prüfung nicht.
+
+## Direktübernahme per Spotify-Symbol
+
+Ein normaler Klick auf das Spotify-Symbol im Dashboard übernimmt jetzt direkt den ersten verfügbaren Spotify-Suchtreffer für Songtitel und Künstler. Der tatsächlich übernommene Titel samt Künstler und Ziel-Playlist wird im Dashboard angezeigt. Dies ist eine bewusste Schnellübernahme, keine Garantie für die richtige Aufnahme/Remix-Version.
+
+Die im Dialog ausdrücklich gewählte eigene Playlist wird als öffentliche Playlist-ID lokal je Spotify-App und -Konto gemerkt. Vor der Übernahme wird geprüft, ob sie weiterhin dem angemeldeten Konto gehört. Ohne gültige gemerkte Playlist wird die eigene „Taberna Flamenca – Requests“ verwendet beziehungsweise bei Bedarf privat angelegt.
+
+„Manuell suchen“ neben der Statusmeldung öffnet die Suche für den betreffenden Wunsch. Alternativ öffnet Umschalt+Klick auf das Spotify-Symbol sofort die manuelle Suche. Bei fehlendem Treffer oder fehlender Anmeldung öffnet sich der Dialog automatisch. Ein bereits übernommener falscher Titel wird dabei nicht automatisch gelöscht; bei Bedarf direkt in Spotify entfernen.
+
+Die Duplikatprüfung bleibt aktiv. Schnellklicks werden während einer laufenden Übernahme blockiert; unsichere Schreibzugriffe werden nicht automatisch erneut gesendet. Eine manuelle Playlist-Änderung ist während der Direktübernahme gesperrt. Die Titelwahl selbst wird bei einem normalen Symbol-Klick ausdrücklich nicht nochmals bestätigt.

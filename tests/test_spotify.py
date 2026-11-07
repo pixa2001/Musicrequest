@@ -32,7 +32,7 @@ class SpotifyTests(unittest.TestCase):
  def search(self,r):
   self.searches.append(r.request);r.fulfill(json={'tracks':{'items':[TRACK]}})
  def session(self,expired=False):self.page.evaluate('([id,expired])=>sessionStorage.setItem("musicrequest.spotify.session",JSON.stringify({clientId:id,accessToken:"fake-old",refreshToken:"fake-refresh",expiresAt:Date.now()+(expired?-1000:3600000)}))',[ID,expired])
- def open(self):self.page.locator('.spotify-song-button').click()
+ def open(self):self.page.locator('.spotify-song-button').click(modifiers=['Shift'])
  def pending(self,age=0):self.page.evaluate('([id,age,uri])=>sessionStorage.setItem("musicrequest.spotify.pkce",JSON.stringify({clientId:id,state:"expected",verifier:"v".repeat(64),createdAt:Date.now()-age,redirectUri:uri}))',[ID,age,self.base+'/dj/spotify-callback.html'])
  def test_search_selection_and_dashboard(self):
   self.session();self.open();self.page.locator('.spotify-result').wait_for();self.assertEqual(parse_qs(urlparse(self.searches[0].url).query)['q'],['Bailando Enrique Iglesias']);self.page.locator('input[name=spotify-track]').check();self.assertIn('Ausgewählt: Bailando',self.page.locator('.spotify-selected').inner_text());self.assertTrue(self.page.get_by_role('button',name='Zur Spotify-Playlist hinzufügen',exact=True).is_disabled())
@@ -123,4 +123,17 @@ class SpotifyTests(unittest.TestCase):
    else:r.fulfill(json={'items':[],'next':None})
   self.page.route('https://api.spotify.com/v1/playlists/playlist1/items**',items)
   self.choose_track();self.load_target();self.page.get_by_role('button',name='Zur Spotify-Playlist hinzufügen',exact=True).click();self.page.locator('.spotify-status').filter(has_text='möglicherweise ausgeführt').wait_for();self.assertEqual(len(calls),1)
+ def test_quick_add_without_confirmation(self):
+  writes=self.playlist_fixture();self.page.locator('.spotify-song-button').click()
+  self.page.locator('.spotify-quick-notice').filter(has_text='Hinzugefügt: Bailando').wait_for()
+  self.assertFalse(self.page.locator('.spotify-dialog').is_visible());self.assertEqual(writes,[('add',{'uris':['spotify:track:track1']})])
+  self.page.get_by_role('button',name='Manuell suchen',exact=True).click();self.page.locator('.spotify-result').wait_for()
+ def test_quick_add_duplicate(self):
+  writes=self.playlist_fixture(duplicate=True);self.page.locator('.spotify-song-button').click();self.page.locator('.spotify-quick-notice').filter(has_text='Bereits enthalten').wait_for();self.assertEqual(writes,[])
+ def test_quick_add_empty_falls_back(self):
+  writes=self.playlist_fixture();self.page.route('https://api.spotify.com/v1/search?*',lambda r:r.fulfill(json={'tracks':{'items':[]}}));self.page.locator('.spotify-song-button').click();self.page.locator('.spotify-dialog').wait_for();self.assertEqual(writes,[])
+ def test_quick_add_requires_consent(self):
+  self.session();self.page.locator('.spotify-song-button').click();self.page.locator('.spotify-status').filter(has_text='Playlist-Berechtigungen').wait_for()
+ def test_quick_add_remembers_other_playlist(self):
+  writes=self.playlist_fixture(named=False);self.open();self.load_target();self.page.locator('#spotify-playlist').select_option('playlist1');self.page.get_by_role('button',name='Schließen',exact=True).click();self.page.locator('.spotify-song-button').click();self.page.locator('.spotify-quick-notice').filter(has_text='Andere Playlist').filter(has_text='Hinzugefügt').wait_for();self.assertEqual(writes,[('add',{'uris':['spotify:track:track1']})])
 if __name__=='__main__':unittest.main()

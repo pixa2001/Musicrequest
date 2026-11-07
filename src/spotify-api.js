@@ -2,7 +2,7 @@ import {SPOTIFY_CLIENT_ID,SPOTIFY_REDIRECT_URI} from "./spotify-config.js";
 const SETTINGS="musicrequest.spotify.settings",SESSION="musicrequest.spotify.session",PENDING="musicrequest.spotify.pkce";
 let refreshing=null,epoch=0;
 const PLAYLIST_SCOPES=["playlist-read-private","playlist-modify-private","playlist-modify-public","user-read-private"];
-let playlistWrite=null;
+let playlistWrite=null,currentSpotifyUser=null;
 const read=key=>{try{return JSON.parse(sessionStorage.getItem(key)||"null");}catch{return null;}};
 export function settings(){
  let local={};try{local=JSON.parse(localStorage.getItem(SETTINGS)||"{}");}catch{}
@@ -16,7 +16,7 @@ export function saveClientId(value){
 }
 export function connected(){const token=read(SESSION);return Boolean(token&&token.clientId===settings().clientId&&(token.refreshToken||token.expiresAt>Date.now()));}
 export function disconnect(){
- epoch++;
+ epoch++;currentSpotifyUser=null;
  // Spotify must never prevent Supabase logout if browser storage is unavailable.
  for(const key of [SESSION,PENDING]){try{sessionStorage.removeItem(key);}catch{}}
 }
@@ -126,6 +126,7 @@ async function allPages(path){
 }
 export async function loadPlaylists(){
  const user=await spotifyRequest("me");
+ currentSpotifyUser=user.id;
  const lists=await allPages("me/playlists?limit=50");
  return {userId:user.id,playlists:lists.filter(p=>p?.id&&p.owner?.id===user.id)};
 }
@@ -134,7 +135,7 @@ export async function createRequestPlaylist(){
  playlistWrite=(async()=>{
   const {userId,playlists}=await loadPlaylists();
   const existing=playlists.find(p=>p.name==="Taberna Flamenca – Requests");if(existing)return existing;
-  const body={name:"Taberna Flamenca – Requests",public:false,description:"Manuell bestätigte Musikwünsche der Taberna Flamenca"};
+  const body={name:"Taberna Flamenca – Requests",public:false,description:"Musikwünsche der Taberna Flamenca"};
   try{return await spotifyRequest("me/playlists",{method:"POST",body});}
   catch(error){if(![404,405].includes(error.status))throw error;return spotifyRequest(`users/${encodeURIComponent(userId)}/playlists`,{method:"POST",body});}
  })();
@@ -158,4 +159,17 @@ export async function addTrackToPlaylist(playlistId,track){
   return {duplicate:false};
  })();
  try{return await playlistWrite;}finally{playlistWrite=null;}
+}
+
+// A playlist preference is public metadata, scoped to the Spotify app and account.
+function preferenceKey(){return `musicrequest.spotify.playlist:${settings().clientId}:${currentSpotifyUser}`;}
+export function rememberPlaylist(id){
+ if(!currentSpotifyUser||!id)return;
+ try{localStorage.setItem(preferenceKey(),id);}catch{}
+}
+export async function quickTargetPlaylist(){
+ const {playlists}=await loadPlaylists();
+ let preferred=null;try{preferred=localStorage.getItem(preferenceKey());}catch{}
+ const playlist=playlists.find(p=>p.id===preferred)||playlists.find(p=>p.name==="Taberna Flamenca – Requests")||await createRequestPlaylist();
+ rememberPlaylist(playlist.id);return playlist;
 }
