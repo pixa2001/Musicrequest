@@ -18,3 +18,13 @@ to 512 pixels for category buttons, field surfaces and the gold call-to-action.
 The headline now uses Water Brush and the categories use Kalam Bold, both from
 the official Google Fonts repository under the included SIL Open Font Licenses
 in `../fonts/`. All heading/button wording remains real text.
+
+`tile-burgundy.webp`, `tile-ember.webp`, `tile-petrol.webp`, `tile-gold.webp` are
+optimized blank photographic material assets extracted from a new AI-generated
+four-material sheet. Their distressed plaster surfaces and irregular incandescent
+rims are used only as backgrounds for the original live HTML controls; no text,
+icons, form fields, or logo are embedded in the materials.
+
+Current lettering: Sarina for the headline and Sriracha for category/send-button
+labels, both locally hosted Latin subsets from the official Google Fonts
+repository with their corresponding SIL Open Font Licenses in `../fonts/`.

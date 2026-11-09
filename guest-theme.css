@@ -70,3 +70,31 @@
 @media(forced-colors:active){.boho-guest .guest-card h1{background:none;color:CanvasText;-webkit-text-fill-color:CanvasText;filter:none}.boho-guest .category-choice>span:before,.boho-guest .glow-field:before{display:none}}
 .boho-guest .guest-card h1{background-blend-mode:soft-light;color:#ffe6c2}
 .boho-guest .glow-field{background-color:#4c2111;background-image:linear-gradient(#00000030,#00000085),url("./assets/boho/relief.webp");background-blend-mode:multiply,multiply}
+
+/* Photographic distressed materials, not smooth colour gradients. */
+@font-face{font-family:"Flamenca Painted";src:url("./assets/fonts/Sarina-Regular-Latin.woff") format("woff");font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:"Flamenca Marker";src:url("./assets/fonts/Sriracha-Regular-Latin.woff") format("woff");font-weight:400;font-style:normal;font-display:swap}
+.boho-guest .guest-card h1{font-family:"Flamenca Painted","Flamenca Dry Brush",cursive;font-size:clamp(2.65rem,5.8vw,4.4rem);font-weight:400;line-height:1.24;letter-spacing:-.035em;background:linear-gradient(#fff0d0,#f0c48e),url("./assets/boho/relief.webp");background-blend-mode:soft-light;background-clip:text;-webkit-background-clip:text;filter:drop-shadow(0 4px 3px #000d) drop-shadow(0 0 15px #d98d2820)}
+.boho-guest .category-choice>span{--material:url("./assets/boho/tile-burgundy.webp");--glow:#f52a6b66;isolation:isolate;background:#330c1b var(--material) center/100% 100% no-repeat;border:1px solid #ffa9bfbb;border-radius:24px;box-shadow:0 -2px 9px var(--glow),0 3px 16px var(--glow),0 8px 16px #0008;font-family:"Flamenca Marker",cursive;font-size:1.2rem;font-weight:400;line-height:1.08;min-height:133px;text-shadow:0 2px 3px #000;gap:7px;padding:15px 5px}
+.boho-guest .category-choice:nth-child(2)>span{--material:url("./assets/boho/tile-ember.webp");--glow:#ff6a2855;background:#4d1309 var(--material) center/100% 100% no-repeat;border-color:#ffc478c9;box-shadow:0 -2px 9px var(--glow),0 3px 16px var(--glow),0 8px 16px #0008}
+.boho-guest .category-choice:nth-child(3)>span{--material:url("./assets/boho/tile-petrol.webp");--glow:#4acebc33;background:#062b2e var(--material) center/100% 100% no-repeat;border-color:#b6efdfcc;box-shadow:0 -2px 8px var(--glow),0 3px 14px var(--glow),0 8px 16px #0008}
+.boho-guest .category-choice>span:before{inset:1px;padding:0;border-radius:inherit;background:linear-gradient(#00000005,#00000022 45%,#00000055);-webkit-mask:none;mask:none;opacity:1;z-index:-1}
+.boho-guest .category-choice input:checked+span{border-color:#fff2bd;box-shadow:0 0 0 3px #ffdf91cc,0 0 25px var(--glow),0 8px 16px #0008}
+.boho-guest .category-choice input:checked+span:after{background:#2b160bed;border:1px solid #ffe5a2;border-radius:50%;width:20px;height:20px;line-height:18px;text-align:center;top:7px;right:7px}
+.boho-guest .category-choice>span>span:last-child{font-weight:400;line-height:1.05;text-shadow:0 2px 3px #000d}
+.boho-guest .guest-card #submit{font-family:"Flamenca Marker",cursive;font-size:2.2rem;font-weight:400;background:#d88d26 url("./assets/boho/tile-gold.webp") center/100% 100% no-repeat;border:1px solid #ffe7b0e6;color:#1e1005;box-shadow:0 -2px 7px #ffb13cbb,0 2px 8px #ff9b2577,0 0 22px #f2862a3d,0 8px 15px #0007;min-height:76px;text-shadow:0 1px #ffdd8e55}
+.boho-guest .guest-card #submit:before{inset:0;padding:0;background:linear-gradient(110deg,#ffe8a414,transparent 35%,#b74b001a);-webkit-mask:none;mask:none;z-index:-1;opacity:1}
+.boho-guest .glow-field{border:1px solid #e8bc85;box-shadow:inset 0 2px 0 #ffc88255,inset 0 -1px 1px #d2643622,0 -2px 7px #ff6d2b44,0 2px 7px #ed74301c,0 5px 12px #0007}
+.boho-guest .glow-field:before{padding:2px;background:conic-gradient(from 5deg,#ffebb9 0deg,#c2582444 40deg,#fff2c8 72deg,#f9955a 110deg,#9c3d1f66 153deg,#ffe0b1 198deg,#b54d2244 230deg,#ffecd4 270deg,#ff6542 320deg,#ffebb9 360deg),url("./assets/boho/relief.webp");background-blend-mode:multiply;background-size:auto,90px;opacity:.95}
+.boho-guest .category-field legend{font-family:"Flamenca Marker",cursive;font-weight:400}
+@media(max-width:600px){.boho-guest .guest-card h1{font-size:2.8rem;line-height:1.25}.boho-guest .category-choice>span{font-size:1rem;min-height:111px;padding:13px 3px;border-radius:20px}.boho-guest .guest-card #submit{font-size:1.85rem;min-height:66px}}
+@media(max-width:350px){.boho-guest .guest-card h1{font-size:2.35rem}.boho-guest .category-choice>span{font-size:.86rem;min-height:102px}.boho-guest .guest-card #submit{font-size:1.6rem}}
+@media(forced-colors:active){.boho-guest .guest-card h1{background:none;color:CanvasText;-webkit-text-fill-color:CanvasText;filter:none}}
+/* Keep the photographed colours intact; avoid multiplying them with fallback paint. */
+.boho-guest .category-choice>span,.boho-guest .category-choice:nth-child(2)>span,.boho-guest .category-choice:nth-child(3)>span{background-blend-mode:normal}
+.boho-guest .guest-card #submit{background-size:cover;background-blend-mode:normal}
+.boho-guest .guest-card #submit:before{background:url("./assets/boho/tile-gold.webp") center/100% 100% no-repeat;background-blend-mode:normal;inset:0;padding:2px;-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;z-index:0;pointer-events:none}
+.boho-guest .guest-card #submit:after{content:"";position:absolute;top:0;left:15%;width:23%;height:2px;background:linear-gradient(90deg,transparent,#fff9d6,transparent);box-shadow:0 0 8px #ffbe51;pointer-events:none}
+.boho-guest .guest-card h1{font-size:clamp(2.45rem,5vw,3.6rem)}
+@media(max-width:600px){.boho-guest .guest-card h1{font-size:2.35rem;line-height:1.28}}
+@media(max-width:350px){.boho-guest .guest-card h1{font-size:2rem}}

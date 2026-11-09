@@ -15,7 +15,7 @@ this documentation and the guest regression tests are changed. Existing
 `src/guest.js`, Supabase client/configuration, migrations, DJ dashboard and
 shared stylesheet are untouched. No JavaScript dependency is added. Font license
 and artwork provenance are in the asset directories. Decoration and font payload
-is approximately 381 KB before HTTP compression, plus the existing logo.
+is approximately 689 KB before HTTP compression, plus the existing logo.
 
 ## Validation
 
@@ -47,3 +47,12 @@ highlighted rims, Water Brush dry-brush headline lettering and Kalam hand letter
 for categories and the send button. Their Latin-subset fonts and licenses are
 self-hosted. Existing wording is unchanged. Heading clipping has a forced-colors
 fallback. This refinement is still confined to the review branch.
+
+## Rustic illuminated material pass
+
+The category buttons now use individual blank burgundy, ember and petrol material
+images with visibly chipped plaster and irregular luminous edges. The gold
+button uses a separate rough material at its natural proportions plus a cropped
+edge layer. Real labels and input controls remain unchanged. Sarina and Sriracha
+provide heavier painted lettering. All five guest regression tests pass after
+this refinement. No production merge or deployment is authorized by this pass.
