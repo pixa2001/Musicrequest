@@ -133,7 +133,18 @@ class SpotifyTests(unittest.TestCase):
  def test_quick_add_empty_falls_back(self):
   writes=self.playlist_fixture();self.page.route('https://api.spotify.com/v1/search?*',lambda r:r.fulfill(json={'tracks':{'items':[]}}));self.page.locator('.spotify-song-button').click();self.page.locator('.spotify-dialog').wait_for();self.assertEqual(writes,[])
  def test_quick_add_requires_consent(self):
-  self.session();self.page.locator('.spotify-song-button').click();self.page.locator('.spotify-status').filter(has_text='Playlist-Berechtigungen').wait_for()
+  self.session();self.page.locator('.spotify-song-button').click();self.page.locator('.spotify-playlist-status').filter(has_text='zusätzlichen Berechtigungen').wait_for()
  def test_quick_add_remembers_other_playlist(self):
   writes=self.playlist_fixture(named=False);self.open();self.load_target();self.page.locator('#spotify-playlist').select_option('playlist1');self.page.get_by_role('button',name='Schließen',exact=True).click();self.page.locator('.spotify-song-button').click();self.page.locator('.spotify-quick-notice').filter(has_text='Andere Playlist').filter(has_text='Hinzugefügt').wait_for();self.assertEqual(writes,[('add',{'uris':['spotify:track:track1']})])
+ def test_dashboard_responsive_structure(self):
+  for width in [390,768,1024,1366,1672]:
+   self.page.set_viewport_size({'width':width,'height':1000})
+   self.assertTrue(self.page.evaluate('document.documentElement.scrollWidth<=innerWidth'))
+   self.assertEqual(self.page.locator('.music-column').evaluate_all('(es)=>es.map(e=>e.dataset.category)'),['latino','german','international'])
+   if width>=1024:
+    tops=self.page.locator('.music-column').evaluate_all('(es)=>es.map(e=>Math.round(e.getBoundingClientRect().top))');self.assertEqual(len(set(tops)),1)
+    toolbar=self.page.locator('.toolbar').bounding_box()
+    for item in ['#event-select','.dj-stats','#export']:
+     box=self.page.locator(item).bounding_box();self.assertGreaterEqual(box['x'],toolbar['x']);self.assertLessEqual(box['x']+box['width'],toolbar['x']+toolbar['width']+1)
+   self.assertTrue(self.page.locator('.equalizer').is_visible())
 if __name__=='__main__':unittest.main()

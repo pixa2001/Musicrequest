@@ -33,3 +33,8 @@ Current design selection: the initial quieter theme is active again. Bangers
 replaces only the headline (Google Fonts, SIL license in `../fonts/Bangers-OFL.txt`).
 The later `relief.webp` / `tile-*.webp` materials and alternate lettering are
 retained review alternatives and are not loaded by the active guest stylesheet.
+
+DJ-only additions: `dj-top.webp` and `dj-bottom.webp` are optimized decorative
+strips from a separate AI-generated landscape wall artwork with small lanterns,
+flowers and corner palms. No text, logo or UI elements are part of the artwork.
+They are loaded only by `dj/boho.css`; the public guest page does not load them.
