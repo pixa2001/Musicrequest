@@ -40,19 +40,13 @@ open the guest root page in your local browser. No build step or database change
 is required. Compare the result on a phone before authorizing a merge. Do not
 merge or deploy this branch without the user's explicit approval.
 
-## Closer material/typography refinement
+## Current approved direction: quieter boho with Bangers
 
-A second review pass adds visible troweled plaster relief on controls, irregular
-highlighted rims, Water Brush dry-brush headline lettering and Kalam hand lettering
-for categories and the send button. Their Latin-subset fonts and licenses are
-self-hosted. Existing wording is unchanged. Heading clipping has a forced-colors
-fallback. This refinement is still confined to the review branch.
-
-## Rustic illuminated material pass
-
-The category buttons now use individual blank burgundy, ember and petrol material
-images with visibly chipped plaster and irregular luminous edges. The gold
-button uses a separate rough material at its natural proportions plus a cropped
-edge layer. Real labels and input controls remain unchanged. Sarina and Sriracha
-provide heavier painted lettering. All five guest regression tests pass after
-this refinement. No production merge or deployment is authorized by this pass.
+The user preferred the initial boho version over both subsequent material passes.
+The runtime guest stylesheet has therefore been restored to the original quieter
+boho design. Only the headline now uses locally hosted Bangers (Latin subset,
+SIL Open Font License included). Its text remains “Hey Dj... play my Song!”.
+Category tiles, input fields, decorations and send-button styling match the
+initial review version. The later rustic material/font assets are retained as
+unused review alternatives; the active stylesheet does not request them.
+Five browser regression tests verify the restored version plus Bangers.

@@ -28,3 +28,8 @@ icons, form fields, or logo are embedded in the materials.
 Current lettering: Sarina for the headline and Sriracha for category/send-button
 labels, both locally hosted Latin subsets from the official Google Fonts
 repository with their corresponding SIL Open Font Licenses in `../fonts/`.
+
+Current design selection: the initial quieter theme is active again. Bangers
+replaces only the headline (Google Fonts, SIL license in `../fonts/Bangers-OFL.txt`).
+The later `relief.webp` / `tile-*.webp` materials and alternate lettering are
+retained review alternatives and are not loaded by the active guest stylesheet.

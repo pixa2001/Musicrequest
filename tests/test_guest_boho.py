@@ -28,8 +28,8 @@ class BohoGuestTests(unittest.TestCase):
    self.page.set_viewport_size({'width':width,'height':900})
    self.assertTrue(self.page.evaluate('document.documentElement.scrollWidth<=innerWidth'))
    self.assertTrue(self.page.locator('.guest-logo').evaluate('(e)=>e.complete&&e.naturalWidth>0'))
-   self.assertTrue(self.page.evaluate('document.fonts.check("20px Flamenca Painted")'))
-   self.assertTrue(self.page.evaluate('document.fonts.check("20px Flamenca Marker")'))
+   self.assertTrue(self.page.evaluate('document.fonts.check("20px Flamenca Bangers")'))
+   self.assertTrue(self.page.evaluate('document.fonts.check("20px Flamenca Brush")'))
    for selector in ['#guest','#title','#artist','#submit','.category-choice']:
     for box in self.page.locator(selector).all():self.assertGreaterEqual(box.bounding_box()['height'],44)
    self.assertEqual(self.page.locator('.category-choice').count(),3)
