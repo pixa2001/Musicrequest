@@ -15,7 +15,7 @@ this documentation and the guest regression tests are changed. Existing
 `src/guest.js`, Supabase client/configuration, migrations, DJ dashboard and
 shared stylesheet are untouched. No JavaScript dependency is added. Font license
 and artwork provenance are in the asset directories. Decoration and font payload
-is approximately 205 KB before HTTP compression, plus the existing logo.
+is approximately 381 KB before HTTP compression, plus the existing logo.
 
 ## Validation
 
@@ -39,3 +39,11 @@ From the repository root, run `python3 -m http.server 8000 --bind 127.0.0.1` and
 open the guest root page in your local browser. No build step or database change
 is required. Compare the result on a phone before authorizing a merge. Do not
 merge or deploy this branch without the user's explicit approval.
+
+## Closer material/typography refinement
+
+A second review pass adds visible troweled plaster relief on controls, irregular
+highlighted rims, Water Brush dry-brush headline lettering and Kalam hand lettering
+for categories and the send button. Their Latin-subset fonts and licenses are
+self-hosted. Existing wording is unchanged. Heading clipping has a forced-colors
+fallback. This refinement is still confined to the review branch.
